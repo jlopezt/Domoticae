@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <TITLE>Domoticae</TITLE>    
+    <link rel="stylesheet" type="text/css" href="/static/css.css">
+  </head>
+
+  <BODY>
+   <div id="div_login" class="margen visible">
+    <form action="/creaUsuario" method="get">
+        <label for="nombre">Nombre:</label><br>
+        <input type="text" id="nombre" name="nombre"><br><br>
+        <label for="apellidos">Apellidos:</label><br>
+        <input type="text" id="apellidos" name="apellidos"><br><br>
+        <label for="correo">Correo:</label><br>
+        <input type="text" id="correo" name="correo"><br><br>
+        <label for="telefono">Telefono:</label><br>
+        <input type="text" id="telefono" name="telefono"><br><br>
+        <label for="direccion">Dirección:</label><br>
+        <input type="text" id="direccion" name="direccion"><br><br>
+        <label for="username">Usuario:</label><br>
+        <input type="text" id="username" name="username"><br><br>
+        <label for="password">Password:</label><br>
+        <input type="password" id="password" name="password"><br><br>
+        <input type="submit" value="Submit">
+      </form>
+    <BR>
+   </div>
+
+    <div id="atras" class="oculto">
+        <iframe id="iframe_result" name="iframe_result" style="height:80%;width:10%;border:none;"></iframe>
+    </div>   
+  </BODY>
+</HTML>

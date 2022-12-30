@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <TITLE>Domoticae</TITLE>
+    <style>       
+        .comun {
+          width: 50%;  
+          text-align: center;
+        }
+        .principal {
+          font-family: Arial, Helvetica, sans-serif;
+          font-size: 80px;
+        }
+        .dropdown {
+          position: relative;
+          display: inline-block;
+        }
+        .dropdown-content {
+          display: none;
+          position: absolute;
+          background-color: #f9f9f9;
+          min-width: 160px;
+          box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+          padding: 12px 16px;
+          z-index: 1;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }        
+    </style>    
+  </head>
+  <body class="comun">
+    <div class="dropdown">
+        <span class="principal">
+          {% if RESULTADO==1 %}
+          Se ha validado el usuario
+          {% else %}
+          El usuario o la contraseña son incorrectos
+          {% endif %}
+      </span>
+        <p>Nombre: {{ NOMBRE }}</p>
+        <p>Apellido: {{ APELLIDO }}</p>
+        <p>Correo: {{ CORREO }}</p>
+        <p>Telefono: {{ TELEFONO }}</p>
+        <p>Direccion: {{ DIRECCION }}</p>
+        <p>Usuario: {{ USUARIO }}</p>
+        <div class="dropdown-content">
+          <p>El usuario y la password son 
+            {% if RESULTADO==1 %}
+            correctos
+            {% else %}
+            incorrectos
+            {% endif %}
+            </p>
+        </div>
+    </div>
+  </body>
+</html>

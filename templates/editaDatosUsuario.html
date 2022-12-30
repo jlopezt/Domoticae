@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <TITLE>Domoticae</TITLE>    
+    <link rel="stylesheet" type="text/css" href="/static/css.css">
+  </head>
+
+  <body class="comun">
+    <div class="izquierda">
+      <form id="volver" action="/main" target="_self">
+        <input id="botonVuelve" type="hidden" name="dir" value="">
+      </form>
+      <form id="cambia" action="/actualizaUsuario/{{ USUARIO }}" method="get">
+      <TABLE id="tabla_usuarios" border="0" width="80%" cellpadding="0" cellspacing="0" width="300" class="tabla">
+        <CAPTION>Datos del usuario</CAPTION>
+        <tbody id="body_tabla_usuario">
+          <tr id="salida_0" class="modo2">
+            <td align="right">Nombre</td>
+            <td align="left"><input type="text" id="nombre" name="nombre" value="{{ NOMBRE }}"></td>
+          </tr>
+          <tr id="salida_0" class="modo2">
+            <td align="right">Apellidos</td>
+            <td align="left"><input type="text" id="apellidos" name="apellidos" value="{{ APELLIDOS }}"></td>
+          </tr>
+          <tr id="salida_0" class="modo2">
+            <td align="right">Direccion</td>
+            <td align="left">{{ DIRECCION }}</td>
+          </tr>
+          <tr id="salida_0" class="modo2">
+            <td align="right">Correo</td>
+            <td align="left"><input type="text" id="correo" name="correo" value="{{ CORREO }}"></td>
+          </tr>
+          <tr id="salida_0" class="modo2">
+            <td align="right">Telefono</td>
+            <td align="left"><input type="text" id="telefono" name="telefono" value="{{ TELEFONO }}"></td>
+          </tr>
+          <tr id="salida_0" class="modo2">
+            <td align="right">Ususario</td>
+            <td align="left">{{ USUARIO }}</td>
+          </tr>
+        </tbody>     
+      </TABLE>
+      </form>
+      <BR><BR>
+      <table>
+        <tbody>
+          <tr>
+            <td align="right"><button form="cambia" style="float: right;" type="submit" value="">Salvar</button></td>
+            <td align="left" ><button form="volver" style="float: right;" type="submit" value="">Volver</button></td>                
+          </tr>
+        </tbody>     
+      </TABLE>
+    </div>
+  </body>
+</html>

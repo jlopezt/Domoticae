@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <TITLE>Domoticae</TITLE>    
+    <link rel="stylesheet" type="text/css" href="/static/css.css">
+    <script>
+      function validarDispositivo(id){
+        var xhValidar = new XMLHttpRequest();
+        xhValidar.open("POST","/dispositivo/" + id, false)
+        xhValidar.send(null)
+        location.reload()
+      }
+
+      function borrarDispositivo(id){
+        var xhBorrar = new XMLHttpRequest();
+        xhBorrar.open("DELETE","/dispositivo/" + id, false)
+        xhBorrar.send(null)
+        location.reload()
+      }
+    </script>
+  </head>
+
+  <body class="comun">
+    <div class="izquierda">
+      <form action="/dispositivos/{{ USUARIO }}" method="get">
+      <TABLE id="tabla_usuarios" border="0" width="80%" cellpadding="0" cellspacing="0" width="300" class="tabla">
+        <CAPTION>Dispositivos del usuario</CAPTION>
+        <tbody id="body_tabla_dispositivos">
+          <tr id="salida_0" class="modo2">
+            <th align="">Nombre</th>
+            <th align="">ID</th>
+            <th align="">Validado</th>
+            <th align="">Acciones</th>
+          </tr>
+          {% for dispositivo in DISPOSITIVOS %}
+          <tr id="dispositivo_" class="modo2">
+            <td id="dispositivo_nombre_" align="left">{{ dispositivo['nombre'] }}</td>
+            <td id="dispositivo_ID_" align="left">{{ dispositivo['ID'] }}</td>
+            <td id="dispositivo_validado_" align="left">{{ dispositivo['validado'] }}</td>
+            <td id="dispositivo_acciones_" align="left">
+              {% if dispositivo['validado']==0 %}
+              <button onclick="validarDispositivo('{{ dispositivo['ID'] }}')">Validar</button>
+              {% endif %}
+              <button onclick="borrarDispositivo('{{ dispositivo['ID'] }}')">Borrar</button>
+            </td>
+          </tr>
+        {% endfor%}
+        </tbody>     
+    </TABLE>
+    </form>
+    </div>
+    </div>
+  </body>
+</html>

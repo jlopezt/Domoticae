@@ -5,7 +5,8 @@ body {
     }
 
 form { 
-    margin-bottom: 0px;
+    margin-bottom: 10px;
+    width: 100%;
 }
 
 .oculto {

@@ -178,7 +178,7 @@ table, td, th {
 
 table {
   border-collapse: collapse;
-  width: 200px;
+  /*width: 200px;*/
 }
 
 th, td {

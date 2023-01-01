@@ -13,6 +13,14 @@
     "dbPassword" : "88716",
     "dbNombre" : "domoticae"
   },
+  "MQTT":{
+    "broker" : "10.68.0.100",
+    "puerto" : 1883,
+    "usuario" : "domoticae",
+    "password" : "88716",
+    "subTopic" : "domoticae",
+    "pubTopic" : "domoticae"
+  },
   "Raiz":{
     "nombre": "Domoticae",
     "cabecera": "Home web",

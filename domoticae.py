@@ -399,20 +399,6 @@ def asocia(usuario,deviceID):
             print(e)            
             return make_response('Error SQL',500)  
 
-"""
-@app.route('/valida/<string:usuario>/<string:deviceID>', methods = ['POST'])
-def valida(usuario,deviceID):  
-    #¿¿¿¿¿¿¿¿¿¿¿¿¿¿¿¿¿¿¿¿¿¿¿¿¿¿ESTO SE USA?????????????????????????????  
-    sql="update Dispositivos set (Validado) set (1) where Validado=0 and Usuario='" + usuario + "' and ID='" + deviceID + "'"
-    print(sql)
-    try:
-        cursor.execute(sql)
-        return make_response('',200)  
-    except Exception as e: 
-        print(e)            
-        return make_response('Error SQL',500)  
-"""
-
 @app.route('/dispositivos/<string:usuario>')
 def dispositivosUsuario(usuario):
     dispositivios=()
@@ -631,20 +617,20 @@ if __name__ == "__main__":
         proceso =configuracion["Proceso"] 
         puerto = proceso["puerto"]
         IP = proceso["IP"]
-        
-        #config de BBDD
-        db = configuracion["DB"]
-        dbIP = db["dbIP"]
-        dbPuerto = db["dbPuerto"]
-        dbUsuario = db["dbUsuario"]
-        dbPassword = db["dbPassword"]
-        dbNombre  = db["dbNombre"]
-        print("IP: " + str(IP) + " | puerto: " + str(puerto) )
 
         #ficheros
         ficheros = configuracion['Ficheros']
         dirUsuarios = str(ficheros['usuarios'])
         if not dirUsuarios.endswith('/'): dirUsuarios += '/'
+
+        #config de BBDD
+        if "DB" in configuracion: 
+            dbConfig = configuracion["DB"]
+            if "dbIP" in dbConfig: dbIP = dbConfig["dbIP"]
+            if "dbPuerto" in dbConfig: dbPuerto = dbConfig["dbPuerto"]
+            if "dbUsuario" in dbConfig: dbUsuario = dbConfig["dbUsuario"]
+            if "dbPassword" in dbConfig: dbPassword = dbConfig["dbPassword"]
+            if "dbNombre" in dbConfig: dbNombre  = dbConfig["dbNombre"]
 
         try:
             db = MySQLdb.connect(dbIP,dbUsuario,dbPassword,dbNombre)
@@ -685,8 +671,6 @@ if __name__ == "__main__":
             principio += cabecera[i]
             i = i + 1
 
-        #print('principio: ' + principio,sys.stderr)
-
         rojo=cabecera[len(cabecera)-3]
         #print('rojo: ' + rojo,sys.stderr)
         final=cabecera[len(cabecera)-2]+cabecera[len(cabecera)-1]
@@ -694,18 +678,6 @@ if __name__ == "__main__":
 
         #config conectados
         usuariosConectados=conectados.Conectados()
-
-        """
-        print("Creo usuarios conectados")
-        usuariosConectados.crea('jlopezt')
-        usuariosConectados.crea('amartin')
-        usuariosConectados.crea('rlaguna')
-        
-        x=usuariosConectados.busca('jlopezt')
-        x['expira']=x['expira'] - datetime.timedelta(minutes=30)
-        x=usuariosConectados.busca('amartin')
-        x['expira']=x['expira'] - datetime.timedelta(minutes=10)
-        """
 
         #Arranco el app
         app.run(host=IP, port=puerto)

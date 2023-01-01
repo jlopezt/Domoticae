@@ -4,8 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <TITLE>Domoticae</TITLE>    
-    <link rel="stylesheet" type="text/css" href="/static/css.css">
+    <link rel='stylesheet' type='text/css' href='/static/main.css'  media="screen">    
+    <link rel="stylesheet" type="text/css" href="/static/css.css"  media="screen">
     <script>
+      function abreTab(evt, cityName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+          tabcontent[i].style.display = "none";
+        }
+        tablinks = document.getElementsByClassName("tablinks");
+        for (i = 0; i < tablinks.length; i++) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+        document.getElementById(cityName).style.display = "block";
+        evt.currentTarget.className += " active";
+      }
+            
       function validarDispositivo(id){
         var xhValidar = new XMLHttpRequest();
         xhValidar.open("POST","/dispositivo/" + id, false)
@@ -20,15 +35,56 @@
         location.reload()
       }
     </script>
+<style>
+  body {font-family: Arial;}
+  
+  /* Style the tab */
+  .tab {
+    overflow: hidden;
+    border: 1px solid #ccc;
+    background-color: #888;
+    color: #000000;
+  }
+  
+  /* Style the buttons inside the tab */
+  .tab button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 10px 10px;
+    transition: 0.3s;
+    font-size: 11px;
+  }
+  
+  /* Change background color of buttons on hover */
+  .tab button:hover {
+    background-color: #ddd;
+  }
+  
+  /* Create an active/current tablink class */
+  .tab button.active {
+    background-color: #ccc;
+  }
+  
+  /* Style the tab content */
+  .tabcontent {
+    display: none;
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-top: none;
+  }
+  </style>    
   </head>
 
   <body class="comun">
-    <div class="izquierda">
+    <div class="izquierda" style="width:100%;" >
       <form action="/dispositivos/{{ USUARIO }}" method="get">
-      <TABLE id="tabla_usuarios" border="0" width="80%" cellpadding="0" cellspacing="0" width="300" class="tabla">
+      <TABLE id="tabla_dispositivos" border="0" width="80%" cellpadding="0" cellspacing="0" width="300" class="tabla">
         <CAPTION>Dispositivos del usuario</CAPTION>
         <tbody id="body_tabla_dispositivos">
-          <tr id="salida_0" class="modo2">
+          <tr id="tr_dispositivos" class="modo2">
             <th align="">Nombre</th>
             <th align="">ID</th>
             <th align="">Validado</th>
@@ -48,9 +104,53 @@
           </tr>
         {% endfor%}
         </tbody>     
-    </TABLE>
-    </form>
+      </TABLE>
+      </form>
     </div>
+
+    <div class="tab">
+      <button class="tablinks" onclick="abreTab(event, 'Configuracion')">Configuracion</button>
+      <button class="tablinks" onclick="abreTab(event, 'Entradas')">Entradas</button>
+      <button class="tablinks" onclick="abreTab(event, 'Salidas')">Salidas</button>
+      <button class="tablinks" onclick="abreTab(event, 'Sensores')">Sensores</button>
+      <button class="tablinks" onclick="abreTab(event, 'Variables')">Variables</button>
+      <button class="tablinks" onclick="abreTab(event, 'Secuenciador')">Secuenciador</button>
+      <button class="tablinks" onclick="abreTab(event, 'Maq. estados')">Maq. estados</button>
+    </div>
+    
+    <div id="Configuracion" class="tabcontent">
+      <h3>Configuracion</h3>
+      <p>London is the capital city of England.</p>
+    </div>
+    
+    <div id="Entradas" class="tabcontent">
+      <h3>Entradas</h3>
+      <p>Paris is the capital of France.</p> 
+    </div>
+    
+    <div id="Salidas" class="tabcontent">
+      <h3>Salidas</h3>
+      <p>Tokyo is the capital of Japan.</p>
+    </div>
+    
+    <div id="Sensores" class="tabcontent">
+      <h3>Sensores</h3>
+      <p>London is the capital city of England.</p>
+    </div>
+    
+    <div id="Variables" class="tabcontent">
+      <h3>Variables</h3>
+      <p>Paris is the capital of France.</p> 
+    </div>
+    
+    <div id="Secuenciador" class="tabcontent">
+      <h3>Secuenciador</h3>
+      <p>Tokyo is the capital of Japan.</p>
+    </div>
+    
+    <div id="Maq. estados" class="tabcontent">
+      <h3>Maq. estados</h3>
+      <p>Tokyo is the capital of Japan.</p>
     </div>
   </body>
 </html>

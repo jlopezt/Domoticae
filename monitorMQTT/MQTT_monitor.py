@@ -47,16 +47,17 @@ def on_connect(client, userdata, flags, rc):
 # when receiving a mqtt message do this;
 def on_message(client, userdata, msg):
     try:
-        print("recibido= topic:" + msg.topic + " | mensaje: " + str(msg.payload))
+        #print("recibido= topic:" + msg.topic + " | mensaje: " + str(msg.payload))
+        print("recibido= topic:" + msg.topic)
 
         topics = str(msg.topic).split('/')
 
         i=0
         for t in topics:
-            print("topic " + str(i) + ": " + t) 
+            #print("topic " + str(i) + ": " + t) 
             i = i+1
 
-        if len(topics)<4:
+        if len(topics)<3:
             print("Faltan valores en el topic " + len(topics))
             return KO
 
@@ -65,22 +66,22 @@ def on_message(client, userdata, msg):
             
         CID = topics[1] #Customer ID
         SID = topics[2] #Service ID
-        DID = topics[3] #Device ID
+        SSID = topics[3] #Sub service ID
 
         #Transformo el mensaje entrante que debe ser un json
         mensaje = str(msg.payload.decode("utf-8"))
-        print (mensaje)
+        #print (mensaje)
         datos_dic = json.loads(mensaje)
-        print(datos_dic)
+        #print(datos_dic)
         datos = json.dumps(datos_dic)
 
-        #compruebo el SID y el DID existen y estan asociados a ese CID
-        sql="select Validado from Dispositivos where ID='" + DID + "' and Nombre='" + SID + "' and Usuario='" + CID + "'"
-        print("consulta: ", sql)
+        #compruebo el SID y el DID existen y estan asociados a ese CID        
+        sql="select Validado from Dispositivos where SID='" + SID + "' and CID='" + CID + "'"
+        #print("consulta: ", sql)
 
         cursor.execute(sql)
         if(cursor.rowcount==0): 
-            print("La tripleta CID, SID, DID no es valida")
+            print("La pareja CID - SID no es valida") 
             return KO
 
         registro=cursor.fetchone()
@@ -89,18 +90,18 @@ def on_message(client, userdata, msg):
             return KO
 
         #compruebo si es el primer dato (=Insert) o ya hay datos para ese servicio (=update)
-        sql="select * from Datos where DID='" + DID + "' and SID='" + SID + "' and CID='" + CID + "'"
-        print("consulta: ", sql)
+        sql="select * from Datos where SSID='" + SSID + "' and SID='" + SID + "' and CID='" + CID + "'"
+        #print("consulta: ", sql)
 
         cursor.execute(sql)
         if(cursor.rowcount==0):
             #Preparo la insercion de los datos
-            sql = "insert into Datos (CID, SID, DID, Dato) values ('" + CID + "','" + SID + "','" + DID + "','" + datos + "')"            
+            sql = "insert into Datos (CID, SID, SSID, Dato) values ('" + CID + "','" + SID + "','" + SSID + "','" + datos + "')"
         else:
             #Preparo la actualizacion de los datos
-            sql = "update Datos set Dato='" + datos + "' where DID='" + DID + "' and SID='" + SID + "' and CID='" + CID + "'"
+            sql = "update Datos set Dato='" + datos + "' where SSID='" + SSID + "' and SID='" + SID + "' and CID='" + CID + "'"
             
-        print("consulta: ", sql)
+        #print("consulta: ", sql)
         cursor.execute(sql)
         db.commit()
         return OK

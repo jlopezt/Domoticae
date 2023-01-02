@@ -292,7 +292,7 @@ def configuracion(usuario,nombreDevice,servicio):
         if not os.path.exists(nombreFichero):
             os.mkdir(nombreFichero)
 
-        print('Directorio de configuracion del dispositivo: ' + nombreFichero)
+        #print('Directorio de configuracion del dispositivo: ' + nombreFichero)
         if not os.path.exists(nombreFichero): return make_response(('Dir not found',404))
 
         nombreFichero += str(servicio + '.json')
@@ -300,7 +300,7 @@ def configuracion(usuario,nombreDevice,servicio):
         print('se guardara en ' + nombreFichero)
 
         cad = request.get_json(True)
-        print(request.get_json(True))
+        #print(request.get_json(True))
 
         with open(nombreFichero, 'w') as f:
             f.write(str(cad))
@@ -337,13 +337,13 @@ def asocia(usuario,deviceID):
     #Segun el metodo de invocacion
     #POST
     if request.method == 'POST': 
-        #Compruebo el nombre
-        nombre=request.args.get('nombre')    
-        if not nombre:
+        #Compruebo el nombreServicio
+        nombreServicio=request.args.get('nombreServicio')    
+        if not nombreServicio:
             return make_response('Nombre no valido',404)
 
         #Compruebo si el dispositivo ya existe
-        sql = "select * from Dispositivos where ID='" + deviceID + "'"
+        sql = "select * from Dispositivos where DID='" + deviceID + "'"
         print ("Consulta: " + sql)
         try:
             cursor.execute(sql)
@@ -354,7 +354,7 @@ def asocia(usuario,deviceID):
                 print("Contrasena txt: " + contrasena_txt)
                 contrasena = md5(contrasena_txt.encode("utf-8")).hexdigest()
 
-                sql = "insert into Dispositivos (ID,Nombre,Usuario,Contrasena) values ('" + deviceID + "','" + nombre + "','" + usuario + "','" + contrasena + "')"
+                sql = "insert into Dispositivos (DID,SID,CID,Contrasena) values ('" + deviceID + "','" + nombreServicio + "','" + usuario + "','" + contrasena + "')"
                 print ("Consulta: " + sql)
                 cursor.execute(sql)
                 db.commit()
@@ -362,7 +362,7 @@ def asocia(usuario,deviceID):
 
             else: #Ya exite una relacion
                 registro = cursor.fetchone()
-                return make_response('El dispositivo ya existe, asignado a ' + registro["Usuario"] ,405)
+                return make_response('El dispositivo ya existe, asignado a ' + registro["CID"] ,405)
                 
         except Exception as e: 
             print(e)  
@@ -376,7 +376,7 @@ def asocia(usuario,deviceID):
                 return make_response('address incorrecta',405)
 
             #Compruebo si el dispositivo ya existe
-            sql = "select * from Dispositivos where Validado=1 and ID='" + deviceID + "'"
+            sql = "select * from Dispositivos where Validado=1 and DID='" + deviceID + "'"
             print ("Consulta: " + sql)
             cursor.execute(sql)
             if(cursor.rowcount<=0):
@@ -416,7 +416,7 @@ def dispositivosUsuario(usuario):
     if(usuario!=username):
         return make_response('',405)
 
-    sql='select nombre,ID,validado from Dispositivos where usuario="' + usuario + '" order by nombre'
+    sql='select SID,DID,validado from Dispositivos where CID="' + usuario + '" order by SID'
     print ("Consulta: " + sql)
     try:
         cursor.execute(sql)
@@ -494,7 +494,7 @@ def dameUsuario(username):
     return usuarioValidado
     
 def validaContrasena(_usuario, _deviceID, _contrasena_in):
-    sql="select Contrasena from Dispositivos where Usuario='" + _usuario + "' and ID='" + _deviceID + "'"
+    sql="select Contrasena from Dispositivos where CID='" + _usuario + "' and DID='" + _deviceID + "'"
     cursor.execute(sql)
     if(cursor.rowcount<=0):
         #Si no existe, retorna error
@@ -527,12 +527,12 @@ def validaSesion(usuario):
     return OK    
 
 def dameNombre(deviceID):
-    sql='select Nombre from Dispositivos where ID="' + deviceID +'"'
+    sql='select SID from Dispositivos where DID="' + deviceID +'"'
     try:
         cursor.execute(sql)
         if(cursor.rowcount>0):
             registro=cursor.fetchone()
-            return registro['Nombre']
+            return registro['SID']
         else:
             return ''
     except Exception as e: 
@@ -540,12 +540,12 @@ def dameNombre(deviceID):
         return '' 
 
 def dameUsuarioDispositivo(deviceID):
-    sql='select Usuario from Dispositivos where ID="' + deviceID +'"'
+    sql='select CID from Dispositivos where DID="' + deviceID +'"'
     try:
         cursor.execute(sql)
         if(cursor.rowcount>0):
             registro=cursor.fetchone()
-            return registro['Usuario']
+            return registro['CID']
         else:
             return ''
     except Exception as e: 
@@ -553,12 +553,12 @@ def dameUsuarioDispositivo(deviceID):
         return ''#make_response('Error SQL',500)
 
 def dameDeviceID(nombre,usuario):
-    sql='select ID from Dispositivos where Usuario="' + usuario + '" and Nombre="' + nombre +'"'
+    sql='select DID from Dispositivos where CID="' + usuario + '" and SID="' + nombre +'"'
     try:
         cursor.execute(sql)
         if(cursor.rowcount>0):
             registro=cursor.fetchone()
-            return registro['ID']
+            return registro['DID']
         else:
             return ''
     except Exception as e: 
@@ -566,7 +566,7 @@ def dameDeviceID(nombre,usuario):
         return ''#make_response('Error SQL',500)  
 
 def dameDeviceValidado(ID):
-    sql='select Validado from Dispositivos where ID="' + ID +'"'
+    sql='select Validado from Dispositivos where DID="' + ID +'"'
     try:
         cursor.execute(sql)
         if(cursor.rowcount>0):
@@ -579,7 +579,7 @@ def dameDeviceValidado(ID):
         return ''#make_response('Error SQL',500)  
 
 def borraDeviceID(ID):
-    sql='delete from Dispositivos where ID="' + ID +'"'
+    sql='delete from Dispositivos where DID="' + ID +'"'
     print(sql)
     try:
         cursor.execute(sql)
@@ -591,7 +591,7 @@ def borraDeviceID(ID):
         return False
 
 def validaDeviceID(ID):
-    sql='update Dispositivos set Validado=1 where ID="' + ID +'"'
+    sql='update Dispositivos set Validado=1 where DID="' + ID +'"'
     print(sql)
     try:
         cursor.execute(sql)

@@ -92,14 +92,14 @@
           </tr>
           {% for dispositivo in DISPOSITIVOS %}
           <tr id="dispositivo_" class="modo2">
-            <td id="dispositivo_nombre_" align="left">{{ dispositivo['nombre'] }}</td>
-            <td id="dispositivo_ID_" align="left">{{ dispositivo['ID'] }}</td>
+            <td id="dispositivo_nombre_" align="left">{{ dispositivo['SID'] }}</td>
+            <td id="dispositivo_ID_" align="left">{{ dispositivo['DID'] }}</td>
             <td id="dispositivo_validado_" align="left">{{ dispositivo['validado'] }}</td>
             <td id="dispositivo_acciones_" align="left">
               {% if dispositivo['validado']==0 %}
-              <button onclick="validarDispositivo('{{ dispositivo['ID'] }}')">Validar</button>
+              <button onclick="validarDispositivo('{{ dispositivo['DID'] }}')">Validar</button>
               {% endif %}
-              <button onclick="borrarDispositivo('{{ dispositivo['ID'] }}')">Borrar</button>
+              <button onclick="borrarDispositivo('{{ dispositivo['DID'] }}')">Borrar</button>
             </td>
           </tr>
         {% endfor%}

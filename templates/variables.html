@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+	<head>
+		<meta charset="UTF-8">
+		<TITLE>Domoticae</TITLE>
+		<link rel="stylesheet" type="text/css" href="/static/css.css">
+		<script>
+			function inicializa(){
+				
+			}
+		</script>
+	</HEAD>
+	<BODY onload="inicializa();">
+		<TABLE id="tabla_variables" border="0" width="80%" cellpadding="0" cellspacing="0" width="300" class="tabla">
+			<CAPTION>Variables</CAPTION>
+			<tbody id="body_tabla_variables">
+				<TR>
+					<th width='10%'>id</th>
+					<th width='40%'>Nombre</th>
+					<th width='30%'>Valor</th>
+					<th width='20%'>Unidades</th>
+				</TR>
+				<!--Una fila por cada entrada--> 
+				{% for variable in REGISTROS %}
+				<TR id="variable_{{variable.id}}" class="modo2">								
+					<TD id="variable_id_{{variable.id}}" align="right">{{variable.id}}</TD>
+					<TD id="variable_nombre_{{variable.id}}" align="right">{{variable.nombre}}</TD>
+					<TD id="variable_valor_{{variable.id}}" align="center">{{ variable.valor }}</TD>
+					<TD id="variable_unidades_{{variable.id}}" align="center">{{variable.unidades}}</TD>				
+				</TR>
+				{% endfor %}
+			</tbody>     
+		</TABLE>
+	</BODY>
+</HTML>

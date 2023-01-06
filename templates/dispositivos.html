@@ -7,28 +7,34 @@
     <link rel='stylesheet' type='text/css' href='/static/main.css'  media="screen">    
     <link rel="stylesheet" type="text/css" href="/static/css.css"  media="screen">
     <script>
-      function abreTab(evt, cityName) {
-        var i, tabcontent, tablinks;
-        tabcontent = document.getElementsByClassName("tabcontent");
-        for (i = 0; i < tabcontent.length; i++) {
-          tabcontent[i].style.display = "none";
-        }
-        tablinks = document.getElementsByClassName("tablinks");
-        for (i = 0; i < tablinks.length; i++) {
-          tablinks[i].className = tablinks[i].className.replace(" active", "");
-        }
-        document.getElementById(cityName).style.display = "block";
-        evt.currentTarget.className += " active";
+      function datosDispositivo(id){
+        console.log('pulso en seleccionar datos')
+        myObj=document.getElementById('accion')
+        myObj.setAttribute('value','datos')
+        myObj=document.getElementById('formSeleccionarDispositivo')
+        myObj.setAttribute('action', '/dispositivo/' + id)
+        myObj.submit()
       }
-            
+
+      function configuracionDispositivo(id){
+        console.log('pulso en seleccionar configuracion')
+        myObj=document.getElementById('accion')
+        myObj.setAttribute('value','configuracion')
+        myObj=document.getElementById('formSeleccionarDispositivo')
+        myObj.setAttribute('action', '/dispositivo/' + id)
+        myObj.submit()
+      }
+
       function validarDispositivo(id){
+        console.log('pulso en validar')
         var xhValidar = new XMLHttpRequest();
         xhValidar.open("POST","/dispositivo/" + id, false)
         xhValidar.send(null)
-        location.reload()
+        location.reload()  
       }
 
       function borrarDispositivo(id){
+        console.log('pulso en borrar')
         var xhBorrar = new XMLHttpRequest();
         xhBorrar.open("DELETE","/dispositivo/" + id, false)
         xhBorrar.send(null)
@@ -71,8 +77,8 @@
   /* Style the tab content */
   .tabcontent {
     display: none;
-    padding: 6px 12px;
-    border: 1px solid #ccc;
+    padding: 1px 1px;
+    border: 0px solid #ccc;
     border-top: none;
   }
   </style>    
@@ -80,13 +86,25 @@
 
   <body class="comun">
     <div class="izquierda" style="width:100%;" >
-      <form action="/dispositivos/{{ USUARIO }}" method="get">
+      <form id="formBorrarDispositivo" action="" target="_self" method="delete">
+          <input id="botonBorra" type="hidden" name="nombre" value="">
+      </form>
+    
+      <form id="formValidarDispositivo" action="" target="_self" method="post">
+          <input id="botonValida" type="hidden" name="nombre" value="">
+      </form>
+    
+      <form id="formSeleccionarDispositivo" action="" target="_self" method="get">
+          <input id="accion" type="hidden" name="accion" value="">
+          <!--<input id="botonSelecciona" type="hidden" name="dir" value="">-->
+      </form>
+            
       <TABLE id="tabla_dispositivos" border="0" width="80%" cellpadding="0" cellspacing="0" width="300" class="tabla">
         <CAPTION>Dispositivos del usuario</CAPTION>
         <tbody id="body_tabla_dispositivos">
           <tr id="tr_dispositivos" class="modo2">
-            <th align="">Nombre</th>
-            <th align="">ID</th>
+            <th align="">Nombre del servicio</th>
+            <th align="">ID dispositivo</th>
             <th align="">Validado</th>
             <th align="">Acciones</th>
           </tr>
@@ -96,61 +114,21 @@
             <td id="dispositivo_ID_" align="left">{{ dispositivo['DID'] }}</td>
             <td id="dispositivo_validado_" align="left">{{ dispositivo['validado'] }}</td>
             <td id="dispositivo_acciones_" align="left">
-              {% if dispositivo['validado']==0 %}
-              <button onclick="validarDispositivo('{{ dispositivo['DID'] }}')">Validar</button>
-              {% endif %}
-              <button onclick="borrarDispositivo('{{ dispositivo['DID'] }}')">Borrar</button>
+                {% if dispositivo['validado']==0 %}
+                <button form="formValidarDispositivo" onclick="validarDispositivo('{{ dispositivo['DID'] }}')">Validar</button>
+                {% endif %}
+                <!--<button form="formBorrarDispositivo" onclick="borrarDispositivo('{{ dispositivo['DID'] }}')">Borrar</button>-->
+                <button onclick="borrarDispositivo('{{ dispositivo['DID'] }}')">Borrar</button>
+
+                <!--<input form="formSeleccionarDispositivo" type="submit" name="Selecciona" value="Selecciona">-->
+                <button onclick="datosDispositivo('{{ dispositivo['DID'] }}')">Datos</button>
+                <button onclick="configuracionDispositivo('{{ dispositivo['DID'] }}')">Configuracion</button>
             </td>
           </tr>
         {% endfor%}
         </tbody>     
       </TABLE>
-      </form>
-    </div>
-
-    <div class="tab">
-      <button class="tablinks" onclick="abreTab(event, 'Configuracion')">Configuracion</button>
-      <button class="tablinks" onclick="abreTab(event, 'Entradas')">Entradas</button>
-      <button class="tablinks" onclick="abreTab(event, 'Salidas')">Salidas</button>
-      <button class="tablinks" onclick="abreTab(event, 'Sensores')">Sensores</button>
-      <button class="tablinks" onclick="abreTab(event, 'Variables')">Variables</button>
-      <button class="tablinks" onclick="abreTab(event, 'Secuenciador')">Secuenciador</button>
-      <button class="tablinks" onclick="abreTab(event, 'Maq. estados')">Maq. estados</button>
-    </div>
-    
-    <div id="Configuracion" class="tabcontent">
-      <h3>Configuracion</h3>
-      <p>London is the capital city of England.</p>
-    </div>
-    
-    <div id="Entradas" class="tabcontent">
-      <h3>Entradas</h3>
-      <p>Paris is the capital of France.</p> 
-    </div>
-    
-    <div id="Salidas" class="tabcontent">
-      <h3>Salidas</h3>
-      <p>Tokyo is the capital of Japan.</p>
-    </div>
-    
-    <div id="Sensores" class="tabcontent">
-      <h3>Sensores</h3>
-      <p>London is the capital city of England.</p>
-    </div>
-    
-    <div id="Variables" class="tabcontent">
-      <h3>Variables</h3>
-      <p>Paris is the capital of France.</p> 
-    </div>
-    
-    <div id="Secuenciador" class="tabcontent">
-      <h3>Secuenciador</h3>
-      <p>Tokyo is the capital of Japan.</p>
-    </div>
-    
-    <div id="Maq. estados" class="tabcontent">
-      <h3>Maq. estados</h3>
-      <p>Tokyo is the capital of Japan.</p>
+      <!--</form>-->
     </div>
   </body>
 </html>

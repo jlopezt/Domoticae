@@ -275,6 +275,7 @@ def test():
 
 @app.route('/configuracion/<string:usuario>/<string:nombreDevice>/<string:servicio>', methods = ['POST','GET'])
 def configuracion(usuario,nombreDevice,servicio):
+    print("Entrando en configuracion...")
     #compruebo la contrasena
     if(validaContrasena(usuario,dameDeviceID(nombreDevice,usuario),request.args.get('address'))!=200):
         return make_response('address incorrecta',405)
@@ -399,22 +400,25 @@ def asocia(usuario,deviceID):
             print(e)            
             return make_response('Error SQL',500)  
 
-@app.route('/dispositivos/<string:usuario>')
+@app.route('/dispositivos/<string:usuario>', methods = ['POST','GET','DELETE'])
 def dispositivosUsuario(usuario):
     dispositivios=()
 
     username = request.cookies.get('userID')
+    print('usuario de la cookie: ' + username)
+    print('usuario recbido: ' + usuario)
+
     if not username:
         #username=""
         print('Salgo por aqui')
-        return make_response('',405)
+        return make_response('',401)
     else:        
         if(usuariosConectados.renueva(usuario,timeOutSesion)==False):
             username=""
-            return make_response('',405)
+            return make_response('',402)
 
     if(usuario!=username):
-        return make_response('',405)
+        return make_response('motivo: ' + usuario + '!=' + username,405)
 
     sql='select SID,DID,validado from Dispositivos where CID="' + usuario + '" order by SID'
     print ("Consulta: " + sql)
@@ -431,9 +435,10 @@ def dispositivosUsuario(usuario):
     resp = make_response(render_template('/dispositivos.html',DISPOSITIVOS=dispositivios, USUARIO=usuario),200)
     return resp
 
-@app.route('/dispositivo/<string:ID>', methods = ['POST','GET','DELETE'])
-def dispositivo(ID):
-    usuario = dameUsuarioDispositivo(ID)
+@app.route('/dispositivo/<string:DID>', methods = ['POST','GET','DELETE'])
+def dispositivo(DID):
+    print('Entrando en dispositivo')
+    usuario = dameUsuarioDispositivo(DID)
     if usuario=='':
         pass #Vamos a / sin cookie
 
@@ -442,23 +447,88 @@ def dispositivo(ID):
 
     if request.method=='POST':
         print('Ha llegado a POST')
-        validaDeviceID(ID)
+        validaDeviceID(DID)
+        resp = make_response("validado",200)
+
     elif request.method == 'GET':
-        pass
+        print('Ha llegado a GET')
+        accion = str(request.args.get('accion'))
+        print("Accion: " + accion)
+
+        if(accion=="datos"):
+            resp = make_response(render_template('/dispositivoDatos.html',USUARIO=usuario,SID=dameNombre(DID)),200)
+        elif(accion=="configuracion"):
+            resp = make_response(render_template('/dispositivoConfiguracion.html',USUARIO=usuario,SID=dameNombre(DID)),200)
+        else:
+            resp = make_response("",400)
+        
+        #return resp
     elif request.method == 'DELETE':
         print('Ha llegado a DELETE')
-        borraDeviceID(ID)
+        borraDeviceID(DID)
+        resp = make_response("Borrado",200)
 
+    """
     URL_vuelta='/dispositivos/' + usuario
     print(URL_vuelta)
     return make_response(URL_vuelta, 200)
-
+    """
+    return resp
 
 @app.route('/lista')
 def lista():
     return usuariosConectados.lista()
+"""SIN VALIDAR"""
+@app.route('/ficheroConfiguracion/<string:usuario>/<string:nombreDevice>/<string:fichero>')
+def ficheroConfiguracion(usuario,nombreDevice,fichero):
+    print("Entrando en ficheroConfiguracion...")
+    #compruebo la sesion
+    if(validaSesion(usuario)!=KO):
+        return make_response('No tiene sesion',405)
+
+    #Aseguro que esta validado antes de guardar o enviar config
+    if dameDeviceValidado(dameDeviceID(nombreDevice,usuario))!=DISPOSITIVO_VALIDADO:
+        print('El dispositivo no esta validado')
+        return make_response(('Dispositivo no validado',405))
+
+    #valido que tiene permiso
+    nombreFichero = dirUsuarios + usuario + '/' + nombreDevice + '/' + fichero
+    print('se leera de ' + nombreFichero)
+    if not os.path.exists(nombreFichero): return make_response(('File not found',404))
+
+    with open(nombreFichero, 'r') as f:
+        cad = f.read()
+        print(cad)
+    
+    return render_template('/configuraciones.html',FICHERO=cad)
+"""SIN VALIDAR"""
+
+@app.route('/recuperaDatos/<string:usuario>/<string:nombreDevice>/<string:SSID>')
+def recuperaDatos(usuario,nombreDevice,SSID):
+    print("Entrando en recuperaDatos...")
+    #compruebo la sesion
+    if(validaSesion(usuario)!=OK):
+        return make_response('No tiene sesion',405)
+
+    #Aseguro que esta validado antes de guardar o enviar config
+    if dameDeviceValidado(dameDeviceID(nombreDevice,usuario))!=DISPOSITIVO_VALIDADO:
+        print('El dispositivo no esta validado')
+        return make_response(('Dispositivo no validado',405))
+
+    #Recupero el valor de la base de datos
+    sql='select Dato from Datos where CID="' + usuario + '" and SID="' + nombreDevice + '" and SSID="' + SSID + '"'
+    cursor.execute(sql)
+    if(cursor.rowcount==0): return make_response(('Sin datos',404))
+    
+    datos=cursor.fetchone()
+    registros=json.loads(datos["Dato"])
+    print(len(registros["datos"]))
 
 
+    #elijo el template
+    template='/' + SSID + '.html'
+
+    return render_template(template,REGISTROS=registros["datos"])
 #************************************************* API *************************************************************
     
 #*************************************************Funciones**********************************************************************
@@ -590,8 +660,8 @@ def borraDeviceID(ID):
         print(e)            
         return False
 
-def validaDeviceID(ID):
-    sql='update Dispositivos set Validado=1 where DID="' + ID +'"'
+def validaDeviceID(DID):
+    sql='update Dispositivos set Validado=1 where DID="' + DID +'"'
     print(sql)
     try:
         cursor.execute(sql)

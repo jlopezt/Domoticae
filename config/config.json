@@ -7,7 +7,7 @@
     "usuarios": "/home/pi/desarrollo/python/flask/domoticae/usuarios"
   },
   "DB":{
-    "dbIP" : "127.0.0.1",
+    "dbIP" : "10.68.0.100",
     "dbPuerto" : 3306,
     "dbUsuario" : "domoticae",
     "dbPassword" : "88716",

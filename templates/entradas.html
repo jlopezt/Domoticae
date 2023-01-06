@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+	<head>
+		<meta charset="UTF-8">
+		<TITLE>Domoticae</TITLE>
+		<link rel="stylesheet" type="text/css" href="/static/css.css">
+		<script>
+			function inicializa(){
+				
+			}
+		</script>
+	</HEAD>
+	<BODY onload="inicializa();">
+		<TABLE id="tabla_entradas" border="0" width="80%" cellpadding="0" cellspacing="0" width="300" class="tabla">
+			<CAPTION>Entradas</CAPTION>
+			<tbody id="body_tabla_entradas">
+				<TR>
+					<th width='5%'>id</th>
+					<th width='30%'>Nombre</th>
+					<th width='20%'>Estado</th>
+					<th width='45%'>Nombre de estado</TH>
+				</TR>
+				<!--Una fila por cada entrada--> 
+				{% for entrada in REGISTROS %}
+				<TR id="entrada_{{entrada.id}}" class="modo2">								
+					<TD id="entrada_id_{{entrada.id}}" align="right">{{entrada.id}}</TD>
+					<TD id="entrada_nombre_{{entrada.id}}" align="right">{{entrada.nombre}}</TD>
+					<TD id="entrada_estado_{{entrada.id}}" align="center">{% if entrada.estado=="0" %}"Off"{% else %}"On"{% endif %}</TD>
+					<TD id="entrada_nombreEstado_{{entrada.id}}" align="center">{{entrada.nombreEstado}}</TD>				
+				</TR>
+				{% endfor %}
+			</tbody>     
+		</TABLE>
+	</BODY>
+</HTML>

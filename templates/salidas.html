@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+	<head>
+		<meta charset="UTF-8">
+		<TITLE>Domoticae</TITLE>
+		<link rel="stylesheet" type="text/css" href="/static/css.css">
+		<script>
+			function inicializa(){
+				
+			}
+		</script>
+	</HEAD>
+	<BODY onload="inicializa();">
+		<TABLE id="tabla_salidas" border="0" width="80%" cellpadding="0" cellspacing="0" width="300" class="tabla">
+			<CAPTION>Salidas</CAPTION>
+			<tbody id="body_tabla_salidas">
+				<TR>
+					<th width='5%'>id</th>
+					<th width='30%'>Nombre</th>
+					<th width='20%'>Estado</th>
+					<th width='15%'>Modo</th>
+					<th width='30%'>Acción</th>
+				</TR>
+				<!--Una fila por cada salida--> 
+				{% for salida in REGISTROS %}
+				<TR id="salida_{{salida.id}}" class="modo2">								
+					<TD id="salida_id_{{salida.id}}" align="right">{{salida.id}}</TD>
+					<TD id="salida_nombre_{{salida.id}}" align="right">{{salida.nombre}}</TD>
+					<!--<TD id="salida_estado_{{salida.id}}" align="center">{% if salida.estado=="0" %}"Off"{% else %}"On"{% endif %}</TD>-->
+					<TD id="salida_nombreEstado_{{salida.id}}" align="center">{{salida.nombreEstado}}</TD>				
+					<TD id="salida_modo_{{salida.id}}" align="center">{{salida.modo}}</TD>				
+					<TD id="salida_accion_{{salida.id}}" align="center"></TD>				
+				</TR>
+				{% endfor %}
+			</tbody>     
+		</TABLE>
+	</BODY>
+</HTML>

@@ -4,7 +4,7 @@
     "puerto" : 5001
   },
   "Ficheros":{
-    "usuarios": "/home/pi/desarrollo/python/flask/domoticae/usuarios"
+    "usuarios": "usuarios"
   },
   "DB":{
     "dbIP" : "10.68.0.100",

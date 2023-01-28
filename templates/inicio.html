@@ -32,26 +32,7 @@
       }
 
       function inicializa(){
-        /*
-        //cargo el iframe con al info inicial
-        //cambiaIFrame("static/panel.html");
-        {% if USUARIO=="" %}
-        cambiaIFrame("static/login.html");
-        {% else %}
-        cambiaIFrame("/main");
-        {% endif %}
-        */
-
-        //Ajusto la altura del iframe
-        var margen = window.getComputedStyle(document.body,null).getPropertyValue("margin-top");
-        margen = margen.substr(0,margen.length-2);//le quito el px del final
-        var alto = window.innerHeight -
-        (margen*2) -
-        document.getElementById("header").offsetHeight -
-        document.getElementById("nav").offsetHeight -
-        document.getElementById("footer").offsetHeight;
-
-        document.getElementById("article").style.height=alto+"px";         
+        inicializaDiv();
       }
 
       function cambiaIFrame(pagina){

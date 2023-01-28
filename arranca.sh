@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /home/pi/desarrollo/python/flask/domoticae
+cd /home/pi/desarrollo/python/flask/Domoticae-plataforma
 
 export FLASK_APP="domoticae.py"
 export FLASK_DEBUG=1

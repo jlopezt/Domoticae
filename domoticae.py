@@ -42,7 +42,7 @@ app = Flask(__name__)
 
 #************************************************* GUI usuario *************************************************************
 @app.route('/')
-def raiz_bis():
+def raiz():
     pagina = 'templates/div_login.html'
 
     usuario = request.cookies.get('userID')
@@ -61,7 +61,7 @@ def raiz_bis():
 
 """OLD"""
 @app.route('/old')
-def raiz():
+def raiz_old():
     usuario = request.cookies.get('userID')
     if not usuario:
         usuario=""
@@ -85,6 +85,7 @@ def main():
     return render_template('/main.html',NOMBRE=usuarioValidado['Nombre'], APELLIDOS=usuarioValidado['Apellidos'], CORREO=usuarioValidado['Correo'], TELEFONO=usuarioValidado['Telefono'], DIRECCION=usuarioValidado['Direccion'], USUARIO=usuario)
 """OLD"""
 
+    #************************************************* usuario *************************************************************
 @app.route('/datosUsuario')
 def datosUsuario():
     usuario = request.cookies.get('userID')
@@ -305,6 +306,99 @@ def actualizaUsuario(usuario):
     resp = redirect('/datosUsuario', code=302)
     resp.set_cookie("userID",usuarioValidado['Usuario'])
     return resp
+    #************************************************* fin usuario *************************************************************
+    #************************************************* dispositivos ********************************************************
+@app.route('/dispositivos/<string:usuario>', methods = ['POST','GET','DELETE'])
+def dispositivosUsuario(usuario):
+    dispositivios=()
+
+    username = request.cookies.get('userID')
+    print('usuario de la cookie: ' + username)
+    print('usuario recbido: ' + usuario)
+
+    if not username:
+        #username=""
+        print('Salgo por aqui')
+        return make_response('',401)
+    else:        
+        if(usuariosConectados.renueva(usuario,timeOutSesion)==False):
+            username=""
+            return make_response('',402)
+
+    if(usuario!=username):
+        return make_response('motivo: ' + usuario + '!=' + username,405)
+
+    sql='select SID,DID,validado from Dispositivos where CID="' + usuario + '" order by SID'
+    print ("Consulta: " + sql)
+    try:
+        cursor.execute(sql)
+        if(cursor.rowcount>0):
+            dispositivios = cursor.fetchall()
+            print(dispositivios)
+
+    except Exception as e: 
+        print(e)  
+        return make_response('Error SQL',500)
+
+    """
+    resp = make_response(render_template('/dispositivos.html',DISPOSITIVOS=dispositivios, USUARIO=usuario),200)
+    return resp
+    """
+    delante = render_template('/div_dispositivos.html',DISPOSITIVOS=dispositivios, USUARIO=usuario)
+    detras = ""
+    return render_template('inicio.html', DELANTE=delante, DETRAS=detras,NOMBRE_PRINCIPIO=nombrePrincipio, NOMBRE_ROJO=nombreRojo, NOMBRE_FINAL=nombreFinal, PRINCIPIO=principio, ROJO=rojo, FINAL=final, PIE=pie, USUARIO=usuario)  
+
+
+@app.route('/dispositivo/<string:DID>', methods = ['POST','GET','DELETE'])
+def dispositivo(DID):
+    print('Entrando en dispositivo')
+    usuario = dameUsuarioDispositivo(DID)
+
+    if usuario=='':
+        pass #Vamos a / sin cookie
+
+    if validaSesion(usuario)!=OK:
+        return redirect('/',302)
+
+    if request.method=='POST':
+        print('Ha llegado a POST')
+        validaDeviceID(DID)
+        resp = make_response("validado",200)
+
+    elif request.method == 'GET':
+        print('Ha llegado a GET')
+        accion = str(request.args.get('accion'))
+        print("Accion: " + accion)
+
+        if(accion=="datos"):
+            #resp = make_response(render_template('/dispositivoDatos.html',USUARIO=usuario,SID=dameNombreDispositivo(DID)),200)
+
+            delante = render_template('div_dispositivoDatos.html',USUARIO=usuario,SID=dameNombreDispositivo(DID))
+            detras = ''
+        elif(accion=="configuracion"):
+            #resp = make_response(render_template('/dispositivoConfiguracion.html',USUARIO=usuario,SID=dameNombreDispositivo(DID)),200)
+
+            delante = render_template('/div_dispositivoConfiguracion.html',USUARIO=usuario,SID=dameNombreDispositivo(DID))
+            detras = ''
+        else:
+            #resp = make_response("",400)
+
+            delante = make_response("",400)
+            detras = ''
+
+    elif request.method == 'DELETE':
+        print('Ha llegado a DELETE')
+        borraDeviceID(DID)
+        #resp = make_response("Borrado",200)
+        delante = make_response("Borrado",200)
+        detras = ''
+
+    return render_template('inicio.html', DELANTE=delante, DETRAS=detras,NOMBRE_PRINCIPIO=nombrePrincipio, NOMBRE_ROJO=nombreRojo, NOMBRE_FINAL=nombreFinal, PRINCIPIO=principio, ROJO=rojo, FINAL=final, PIE=pie, USUARIO=usuario)  
+    """
+    return resp
+    """
+
+    #************************************************* fin dispositivos ********************************************************
 #************************************************* GUI usuario *************************************************************
 
 #************************************************* API *************************************************************
@@ -325,12 +419,18 @@ def configuracion(usuario,nombreDevice,servicio):
         return make_response(('Dispositivo no validado',402))
 
     if request.method == 'POST': 
-        nombreFichero = dirUsuarios + usuario + '/'
-        if not os.path.exists(nombreFichero):
-            os.mkdir(nombreFichero)
+        nombreFichero = os.getcwd()        
+        if(not nombreFichero.endswith('/')): nombreFichero += '/'
+
+        nombreFichero += dirUsuarios 
+        if not os.path.exists(nombreFichero): os.mkdir(nombreFichero)
+
+        if(not nombreFichero.endswith('/')): nombreFichero += '/'
+        nombreFichero += usuario + '/'
+        if not os.path.exists(nombreFichero): os.mkdir(nombreFichero)
+
         nombreFichero += nombreDevice + '/'
-        if not os.path.exists(nombreFichero):
-            os.mkdir(nombreFichero)
+        if not os.path.exists(nombreFichero): os.mkdir(nombreFichero)
 
         #print('Directorio de configuracion del dispositivo: ' + nombreFichero)
         if not os.path.exists(nombreFichero): return make_response(('Dir not found',404))
@@ -442,77 +542,6 @@ def asocia(usuario,deviceID):
         except Exception as e: 
             print(e)            
             return make_response('Error SQL',500)  
-
-@app.route('/dispositivos/<string:usuario>', methods = ['POST','GET','DELETE'])
-def dispositivosUsuario(usuario):
-    dispositivios=()
-
-    username = request.cookies.get('userID')
-    print('usuario de la cookie: ' + username)
-    print('usuario recbido: ' + usuario)
-
-    if not username:
-        #username=""
-        print('Salgo por aqui')
-        return make_response('',401)
-    else:        
-        if(usuariosConectados.renueva(usuario,timeOutSesion)==False):
-            username=""
-            return make_response('',402)
-
-    if(usuario!=username):
-        return make_response('motivo: ' + usuario + '!=' + username,405)
-
-    sql='select SID,DID,validado from Dispositivos where CID="' + usuario + '" order by SID'
-    print ("Consulta: " + sql)
-    try:
-        cursor.execute(sql)
-        if(cursor.rowcount>0):
-            dispositivios = cursor.fetchall()
-            print(dispositivios)
-
-    except Exception as e: 
-        print(e)  
-        return make_response('Error SQL',500)
-
-    resp = make_response(render_template('/dispositivos.html',DISPOSITIVOS=dispositivios, USUARIO=usuario),200)
-    return resp
-
-@app.route('/dispositivo/<string:DID>', methods = ['POST','GET','DELETE'])
-def dispositivo(DID):
-    print('Entrando en dispositivo')
-    usuario = dameUsuarioDispositivo(DID)
-
-    if usuario=='':
-        pass #Vamos a / sin cookie
-
-    if validaSesion(usuario)!=OK:
-        return redirect('/',302)
-
-    if request.method=='POST':
-        print('Ha llegado a POST')
-        validaDeviceID(DID)
-        resp = make_response("validado",200)
-
-    elif request.method == 'GET':
-        print('Ha llegado a GET')
-        accion = str(request.args.get('accion'))
-        print("Accion: " + accion)
-
-        if(accion=="datos"):
-            resp = make_response(render_template('/dispositivoDatos.html',USUARIO=usuario,SID=dameNombreDispositivo(DID)),200)
-        elif(accion=="configuracion"):
-            resp = make_response(render_template('/dispositivoConfiguracion.html',USUARIO=usuario,SID=dameNombreDispositivo(DID)),200)
-        else:
-            resp = make_response("",400)
-        
-        #return resp
-    elif request.method == 'DELETE':
-        print('Ha llegado a DELETE')
-        borraDeviceID(DID)
-        resp = make_response("Borrado",200)
-
-    return resp
 
 @app.route('/lista')
 def lista():

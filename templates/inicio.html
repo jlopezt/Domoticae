@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <title>Domoticae</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!--
+    <link rel="stylesheet" type="text/css" href="/static/css.css" media="screen" />
+    -->
+    <!--
+    <link rel='stylesheet' type='text/css' href='/static/main.css'>
+    -->
+    <link rel='stylesheet' type='text/css' href='/static/inicio.css'>
+    <script>
+      function cambiaDiv() {
+        console.log("Entrando");
+        if (document.getElementById("atras").className.includes("oculto")) {
+          console.log("Atras: " + document.getElementById("atras").className + "mostrando atras");
+          document.getElementById("atras").className = "container visible";
+        } else {
+          console.log("Atras: " + document.getElementById("atras").className + "ocultando atras");
+          document.getElementById("atras").className = "container oculto";
+        }
+
+        if (document.getElementById("delante").className.includes("visible")) {
+          console.log("Delante: " + document.getElementById("delante").className + " Ocultando delante");
+          document.getElementById("delante").className = "container oculto";
+        } else {
+          console.log("Delante: " + document.getElementById("delante").className + " mostrando delante");
+          document.getElementById("delante").className = "container visible";
+        }
+      }
+
+      function inicializa(){
+        /*
+        //cargo el iframe con al info inicial
+        //cambiaIFrame("static/panel.html");
+        {% if USUARIO=="" %}
+        cambiaIFrame("static/login.html");
+        {% else %}
+        cambiaIFrame("/main");
+        {% endif %}
+        */
+
+        //Ajusto la altura del iframe
+        var margen = window.getComputedStyle(document.body,null).getPropertyValue("margin-top");
+        margen = margen.substr(0,margen.length-2);//le quito el px del final
+        var alto = window.innerHeight -
+        (margen*2) -
+        document.getElementById("header").offsetHeight -
+        document.getElementById("nav").offsetHeight -
+        document.getElementById("footer").offsetHeight;
+
+        document.getElementById("article").style.height=alto+"px";         
+      }
+
+      function cambiaIFrame(pagina){
+        //cargo el iframe con la pagina indicada
+        var c=document.getElementById("iframe_a");
+        console.log(c.getAttribute("src"));
+        c.setAttribute("src",pagina);
+      };
+
+      function cambiaPagina(pagina){
+        location.href = pagina;
+      };       
+    </script>
+  </head>
+  <body onload="inicializa();">
+    <header class="header" id="header">
+      <div class="container header-flex-cotariner" id="nombreFamilia">
+        <div class="titulo">
+          <span id="nombre_1">{{ NOMBRE_PRINCIPIO }}</span><span id="nombre_2" style="color:red">{{ NOMBRE_ROJO }}</span><span id="nombre_3">{{ NOMBRE_FINAL }}</span>
+        </div>
+
+        <nav class="navigation" id="nav">
+          <ul id="ul_menu">
+              <li onMouseOver="this.style.cursor='pointer'" onClick='window.open("/","_self")'>Inicio</li>
+              {% if USUARIO != "" %}
+              <li onMouseOver="this.style.cursor='pointer'" onClick='window.open("/datosUsuario","_self")'>Datos usuario</li>
+              <li onMouseOver="this.style.cursor='pointer'" onClick='window.open("/dispositivos/{{ USUARIO }}","_self")'>Dispositivos</li>
+              {% endif %}
+              <li onMouseOver="this.style.cursor='pointer'" onClick='window.open("/cerrarSesion","_self")'>Cerrar sesion</li>
+              <li onMouseOver="this.style.cursor='pointer'" onClick="cambiaDiv()">Cambiar</li>
+          </ul>
+        </nav>
+                
+        <span class="usuario">usuario: {{ USUARIO }}</span>
+
+      </div>
+    </header>
+
+    <main class="main">
+        <div class="container visible" id="delante">
+          {% autoescape off %}
+          {{ DELANTE }}
+          {% endautoescape %}
+        </div>
+        <div class="container oculto" id="atras">   
+          {% autoescape off %}
+          {{ DETRAS }}
+          {% endautoescape %}
+        </div>
+    </main>
+
+    <footer class="footer" id="footer">
+        <div class="container footer-flex-cotariner" id="version">
+          <p>{{ PIE }} - Código con acentos</p>
+          <a href="https://www.domoticae.com" target="_self">domoticae-2022</a></div>
+    </footer>
+  </body>
+</html>

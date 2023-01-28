@@ -39,9 +39,20 @@
         </tbody>     
     </TABLE>
     <BR><BR>
-    <form action="/editaDatosUsuario/{{ USUARIO }}" method="get">
-      <input type="submit" value="Edita datos">
+      <form id="volver" action="/main" target="_self">
+        <input id="botonVuelve" type="hidden" name="dir" value="">
+      </form>      
+    <form id="cambia" action="/editaDatosUsuario/{{ USUARIO }}" method="get">
+      <input type="hidden" value="Edita datos">
     </form>
+    <table>
+      <tbody>
+        <tr>
+          <td align="right"><button form="cambia" style="float: right;" type="submit" value="">Edita datos</button></td>
+          <!--<td align="left" ><button form="volver" style="float: right;" type="submit" value="">Volver</button></td>-->
+        </tr>
+      </tbody>     
+    </TABLE>    
     </div>
   </body>
 </html>

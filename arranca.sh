@@ -7,5 +7,5 @@ export FLASK_DEBUG=1
 #export FLASK_ENV=development
 
 #flask run --host=10.68.0.101 --port=15000
-python3 domoticae.py
+python domoticae.py
 

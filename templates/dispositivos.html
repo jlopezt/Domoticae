@@ -85,7 +85,7 @@
   </head>
 
   <body class="comun">
-    <div class="izquierda" style="width:100%;" >
+    <div style="display: flex;margin-top: 10px;align-items: center;width:100%;flex-wrap: wrap;flex-direction: column-reverse;">
       <form id="formBorrarDispositivo" action="" target="_self" method="delete">
           <input id="botonBorra" type="hidden" name="nombre" value="">
       </form>
@@ -99,7 +99,7 @@
           <!--<input id="botonSelecciona" type="hidden" name="dir" value="">-->
       </form>
             
-      <TABLE id="tabla_dispositivos" border="0" width="80%" cellpadding="0" cellspacing="0" width="300" class="tabla">
+      <TABLE id="tabla_dispositivos" border="0" margin="5px" style="border-left: 10px" width="90%" cellpadding="0" cellspacing="0" width="300" class="tabla">
         <CAPTION>Dispositivos del usuario</CAPTION>
         <tbody id="body_tabla_dispositivos">
           <tr id="tr_dispositivos" class="modo2">

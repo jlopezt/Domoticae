@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <TITLE>Domoticae</TITLE>    
+    <link rel='stylesheet' type='text/css' href='/static/main.css'  media="screen">    
+    <link rel="stylesheet" type="text/css" href="/static/css.css"  media="screen">
+    <link rel="stylesheet" type="text/css" href="/static/domoticae.css"  media="screen">
+    <script>
+      //MQTT
+      var hostname       = "10.68.0.101";
+      var port           = 9000;
+      var basePath       = "mqtt";
+      var clientId       = "web_id_" + parseInt(Math.random() * 100000, 10);
+      var topic_ping     = "ping";
+      var topic_status   = "casaPre/Riego/#";
+      //Fin MQTT
+
+      function inicia(servicio){
+        var servicioInicio='Entradas'
+        document.getElementById(servicioInicio).style.display = "block";
+        cargaFrame(servicioInicio)
+
+        //MQTT
+        connect(hostname, port, basePath, clientId, topic_ping,topic_status);
+      }
+
+      function cargaFrame(tabName) {
+        var SSID, myFrame
+
+        console.log("pulso en " + tabName)
+        SSID=tabName.toLowerCase()
+        myFrame = document.getElementById("iframe_" + SSID)
+        myFrame.setAttribute("src", "/recuperaDatos/{{USUARIO}}/{{SID}}/" + SSID)  
+      }
+
+      function abreTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+        cargaFrame(tabName)
+
+        tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+          tabcontent[i].style.display = "none";
+        }
+        tablinks = document.getElementsByClassName("tablinks");
+        for (i = 0; i < tablinks.length; i++) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
+      }
+
+      function salir(){
+        history.back()
+      }      
+    </script>
+  </head>
+
+  <body class="comun" onload="inicia('Config')">
+    <p>Datos</p>
+    <div class="tab">      
+      <!--<button class="tablinks" onclick="abreTab(event, 'Entradas')">Entradas</button>-->
+      <button class="tablinks" onclick="abreTab(event, 'Entradas')">Entradas</button>
+      <button class="tablinks" onclick="abreTab(event, 'Salidas')">Salidas</button>
+      <!--<button class="tablinks" onclick="abreTab(event, 'Sensores')">Sensores</button>-->
+      <button class="tablinks" onclick="abreTab(event, 'Variables')">Variables</button>
+      <button class="tablinks" onclick="abreTab(event, 'Secuenciador')">Secuenciador</button>
+      <button class="tablinks" onclick="abreTab(event, 'Maq.estados')">Maq.estados</button>
+      <button class="tablinks" style="float: right;" onclick="salir()">Salir</button>
+    </div>
+    
+    <div id="Entradas" class="tabcontent">
+      <!--<iframe id="iframe_entradas" style=" border: 0px solid #ccc; height: 600px;width: 100%;" src=""></iframe>-->
+      <TABLE id="tabla_entradas" border="0" width="80%" cellpadding="0" cellspacing="0" width="300" class="tabla">
+        <CAPTION>Entradas</CAPTION>
+        <tbody id="body_tabla_entradas">
+          <TR>
+            <th width='5%'>id</th>
+            <th width='30%'>Nombre</th>
+            <th width='20%'>Estado</th>
+            <th width='45%'>Nombre de estado</TH>
+          </TR>
+          <!--Una fila por cada entrada--> 
+          {% for entrada in REGISTROS %}
+          <TR id="entrada_{{entrada.id}}" class="modo2">								
+            <TD id="entrada_id_{{entrada.id}}" align="right">{{entrada.id}}</TD>
+            <TD id="entrada_nombre_{{entrada.id}}" align="right">{{entrada.nombre}}</TD>
+            <TD id="entrada_estado_{{entrada.id}}" align="center">{% if entrada.estado=="0" %}"Off"{% else %}"On"{% endif %}</TD>
+            <TD id="entrada_nombreEstado_{{entrada.id}}" align="center">{{entrada.nombreEstado}}</TD>				
+          </TR>
+          {% endfor %}
+        </tbody>     
+      </TABLE>      
+    </div>
+    
+    <div id="Salidas" class="tabcontent">
+		<TABLE id="tabla_salidas" border="0" width="80%" cellpadding="0" cellspacing="0" width="300" class="tabla">
+			<CAPTION>Salidas</CAPTION>
+			<tbody id="body_tabla_salidas">
+				<TR>
+					<th width='5%'>id</th>
+					<th width='30%'>Nombre</th>
+					<th width='20%'>Estado</th>
+					<th width='15%'>Modo</th>
+					<th width='30%'>Acción</th>
+				</TR>
+				<!--Una fila por cada salida--> 
+				{% for salida in REGISTROS %}
+				<TR id="salida_{{salida.id}}" class="modo2">								
+					<TD id="salida_id_{{salida.id}}" align="right">{{salida.id}}</TD>
+					<TD id="salida_nombre_{{salida.id}}" align="right">{{salida.nombre}}</TD>
+					<!--<TD id="salida_estado_{{salida.id}}" align="center">{% if salida.estado=="0" %}"Off"{% else %}"On"{% endif %}</TD>-->
+					<TD id="salida_nombreEstado_{{salida.id}}" align="center">{{salida.nombreEstado}}</TD>				
+					<TD id="salida_modo_{{salida.id}}" align="center">{{salida.modo}}</TD>				
+					<TD id="salida_accion_{{salida.id}}" align="center"></TD>				
+				</TR>
+				{% endfor %}
+			</tbody>     
+	    </TABLE>
+    </div>
+
+    <div id="Variables" class="tabcontent">
+		<TABLE id="tabla_variables" border="0" width="80%" cellpadding="0" cellspacing="0" width="300" class="tabla">
+			<CAPTION>Variables</CAPTION>
+			<tbody id="body_tabla_variables">
+				<TR>
+					<th width='10%'>id</th>
+					<th width='40%'>Nombre</th>
+					<th width='30%'>Valor</th>
+					<th width='20%'>Unidades</th>
+				</TR>
+				<!--Una fila por cada entrada--> 
+				{% for variable in REGISTROS %}
+				<TR id="variable_{{variable.id}}" class="modo2">								
+					<TD id="variable_id_{{variable.id}}" align="right">{{variable.id}}</TD>
+					<TD id="variable_nombre_{{variable.id}}" align="right">{{variable.nombre}}</TD>
+					<TD id="variable_valor_{{variable.id}}" align="center">{{ variable.valor }}</TD>
+					<TD id="variable_unidades_{{variable.id}}" align="center">{{variable.unidades}}</TD>				
+				</TR>
+				{% endfor %}
+			</tbody>     
+		</TABLE>
+    </div>  
+    <!--
+    <div id="Sensores" class="tabcontent">
+      <iframe id="iframe_entradas" style=" border: 0px solid #ccc; height: 600px;width: 100%;" src=""></iframe>
+    </div>
+    -->
+
+    <div id="Secuenciador" class="tabcontent">
+		<TABLE id="tabla_planeses" border="0" width="80%" cellpadding="0" cellspacing="0" width="300" class="tabla">
+			<CAPTION>Secuenciador</CAPTION>
+			<tbody id="body_tabla_planes">
+				<TR>
+					<th width='10%'>id</th>
+					<th width='40%'>Nombre</th>
+				</TR>
+				<!--Una fila por cada entrada--> 
+			</tbody>     
+		</TABLE>
+    </div>
+    
+    <div id="Maq.estados" class="tabcontent">
+		<TABLE id="tabla_Maq.estados" border="0" width="80%" cellpadding="0" cellspacing="0" width="300" class="tabla">
+			<CAPTION>Secuenciador</CAPTION>
+			<tbody id="body_tabla_Maq.estados">
+				<TR>
+					<th width='10%'>id</th>
+					<th width='40%'>Nombre</th>
+				</TR>
+				<!--Una fila por cada entrada--> 
+			</tbody>     
+		</TABLE>
+    </div>
+  </body>
+</html>

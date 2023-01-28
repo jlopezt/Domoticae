@@ -7,35 +7,98 @@
     <link rel='stylesheet' type='text/css' href='/static/main.css'  media="screen">    
     <link rel="stylesheet" type="text/css" href="/static/css.css"  media="screen">
     <script>
+      function inicia(servicio){
+        var servicioInicio='Entradas'
+        document.getElementById(servicioInicio).style.display = "block";
+        cargaFrame(servicioInicio)
+      }
+
+      function inicia(servicio){
+        var servicioInicio='Config'
+        document.getElementById(servicioInicio).style.display = "block";
+        document.getElementById('boton' + servicioInicio).className += " active";
+        leeConfig(servicioInicio)
+      }
+
       function leeConfig(servicio){
         var xhconfiguracion = new XMLHttpRequest();
-        xhServicios.onreadystatechange = function() {
-          if (xhServicios.readyState == 4) {
-            if(xhServicios.status == 200) {
-              console.log("JSON: " + xhServicios.responseText)
-              // AQUI VA EL CODIGO QUE GESTIONA LA RESPUESTA
-              //var res = JSON.parse(xhServicios.responseText);        
+        xhconfiguracion.onreadystatechange = function() {
+          if (xhconfiguracion.readyState == 4) {
+            if(xhconfiguracion.status == 200) {
+              console.log("JSON: " + xhconfiguracion.responseText)
+              // AQUI VA EL CODIGO QUE GESTIONA LA RESPUESTA              
+              console.log(servicio)
+              text=document.getElementById("text" + servicio)
+              text.value=xhconfiguracion.responseText
               //
             }
           }
         };
-      xhServicios.open("GET", "/configuracion/{{USUARIO}}/{{NOMBREDEVICE}}/{{SID}}", true);
-      xhServicios.send(null); 
+      xhconfiguracion.open("GET", "/ficheroConfiguracion/{{USUARIO}}/{{SID}}/" + servicio, true);
+      xhconfiguracion.send(null); 
       }
-      function cargaFrame(tabName) {
-        var SSID, myFrame
 
-        console.log("pulso en " + tabName)
-        SSID=tabName.toLowerCase()
-        myFrame = document.getElementById("iframe_" + SSID)
-        //'/configuracion/<string:usuario>/<string:nombreDevice>/<string:servicio>'
-        //hago un xhrequest como antes y leo el fichero y lo cartgo en un edit grande
-        myFrame.setAttribute("src", "/configuracion/{{USUARIO}}/{{SID}}/" + SSID)  
+      function botonEnviar(servicio){
+        var xhenviaMQTT = new XMLHttpRequest();
+        xhenviaMQTT.onreadystatechange = function() {
+          if (xhenviaMQTT.readyState == 4) {
+            if(xhenviaMQTT.status == 200) {
+              console.log("JSON: " + xhenviaMQTT.responseText)
+              // AQUI VA EL CODIGO QUE GESTIONA LA RESPUESTA              
+              console.log('enviada solicitud de descarga de configuracion')
+              //
+            }
+          }
+        };
+        xhenviaMQTT.open("POST", "/descargaConfig/{{USUARIO}}/{{SID}}/" + servicio, true);
+        xhenviaMQTT.send(null);
+      }
+
+      function enviaFichero(servicio,contenido){
+        //verifico que es un JSON valido
+        if (!isJsonString(contenido)) {
+          alert('JSON no valido');
+          return;
+        }
+
+        var xmlhttp = new XMLHttpRequest();   // new HttpRequest instance
+        xmlhttp.onreadystatechange = function() {
+          if (xmlhttp.readyState == 4) {
+            if(xmlhttp.status == 200) {
+              // AQUI VA EL CODIGO QUE GESTIONA LA RESPUESTA
+              console.log(servicio + ' envido correctamente (' + xmlhttp.status + ')')              
+            }
+            salir()
+          }
+        };
+        var URL = "/ficheroConfiguracion/{{USUARIO}}/{{SID}}/" + servicio;
+        xmlhttp.open("POST", URL);
+        xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        xmlhttp.send(contenido);
+      }
+
+      function salir(){
+        history.back()
+      }
+      
+      function botonEdicion(servicio){
+        if (document.getElementById('text' + servicio).disabled){
+          document.getElementById('text' + servicio).disabled=false
+          document.getElementById('botonEditar' + servicio).innerHTML='Salvar'          
+        }
+        else{
+          //document.getElementById('text' + servicio).disabled=true
+          //document.getElementById('botonEditar' + servicio).value='Editar'
+          myForm = document.getElementById('formConfig' + servicio)
+          //myForm.setproperty('action',"/ficheroConfiguracion/{{USUARIO}}/{{SID}}/" + servicio)
+          enviaFichero(servicio,document.getElementById('text' + servicio).value)
+        
+        }        
       }
 
       function abreTab(evt, tabName) {
         var i, tabcontent, tablinks;
-        cargaFrame(tabName)
+        leeConfig(tabName)
 
         tabcontent = document.getElementsByClassName("tabcontent");
         for (i = 0; i < tabcontent.length; i++) {
@@ -48,6 +111,15 @@
         document.getElementById(tabName).style.display = "block";
         evt.currentTarget.className += " active";
       }
+
+      function isJsonString(str) {
+        try {
+            JSON.parse(str);
+        } catch (e) {
+            return false;
+        }
+        return true;
+      }      
     </script>
 <style>
   body {font-family: Arial;}
@@ -92,69 +164,128 @@
   </style>    
   </head>
 
-  <body class="comun">
+  <body class="comun" onload="inicia('Config')">
     <p>Configuracion</p>
     <div class="tab">
-      <!--<button class="tablinks" onclick="abreTab(event, 'Entradas')">Entradas</button>-->
-      <button class="tablinks" onclick="abreTab(event, 'config')">Config</button>
-      <button class="tablinks" onclick="abreTab(event, 'WiFiConfig')">WiFi</button>
-      <button class="tablinks" onclick="abreTab(event, 'MQTT')">MQTT</button>
-      <button class="tablinks" onclick="abreTab(event, 'Entradas')">Entradas</button>
-      <button class="tablinks" onclick="abreTab(event, 'Salidas')">Salidas</button>
-      <!--<button class="tablinks" onclick="abreTab(event, 'Sensores')">Sensores</button>-->
-      <button class="tablinks" onclick="abreTab(event, 'Variables')">Variables</button>
-      <button class="tablinks" onclick="abreTab(event, 'Secuenciador')">Secuenciador</button>
-      <button class="tablinks" onclick="abreTab(event, 'Maq.estados')">Maq.estados</button>
+      <button id='botonConfig' class="tablinks" onclick="abreTab(event, 'Config')">Config</button>
+      <button id='botonWiFiConfig' class="tablinks" onclick="abreTab(event, 'WiFiConfig')">WiFi</button>
+      <button id='botonMQTTConfig' class="tablinks" onclick="abreTab(event, 'MQTTConfig')">MQTT</button>
+      <button id='botonEntradasConfig' class="tablinks" onclick="abreTab(event, 'EntradasConfig')">Entradas</button>
+      <button id='botonSalidasConfig' class="tablinks" onclick="abreTab(event, 'SalidasConfig')">Salidas</button>
+      <button id='botonVariables' class="tablinks" onclick="abreTab(event, 'Variables')">Variables</button>
+      <button id='botonSecuenciador' class="tablinks" onclick="abreTab(event, 'Secuenciador')">Secuenciador</button>
+      <button id='botonMaq.Estados' class="tablinks" onclick="abreTab(event, 'MaqEstadosConfig')">Maq.estados</button>
+      <button class="tablinks" style="float: right;" onclick="history.back()">Volver</button>
     </div>
     
     <div id="Config" class="tabcontent">
-      <label for="textConfig">Configuracion de Config</label>
-      <textarea id="textConfig" cols="80" rows="40" disabled></textarea>
-      <!--<iframe id="iframe_entradas" style=" border: 0px solid #ccc; height: 600px;width: 100%;" src=""></iframe>-->
+      <p style="text-align: center;font-size: 28px; background-color: #777;border-color: #777;border-radius: 10px;border: 1px; border-style: solid;">Configuracion de Config</p>
+      <div style="clear:both;">
+        <spam style="float: left;border: 3rem;width:45%;">
+          <form style="border-color: #777;border-radius: 5px;border: 1px; border-style: solid;" id="configForm" action="">
+            <p style="margin-top: 10px; margin-bottom: 10px;">
+              <spam>Formulario de configuracion</spam>
+              <spam style="float: right;margin-right: 10px;"><button id="botonEnviarConfig" onclick="botonEnviar('Config')">Enviar al dispositivo</button></spam>
+            </p>
+            <label for="nombreDispositivo">nombre del dispositivo:</label>
+            <input name="nombreDispositivo" type="text"><br><br>
+            <label for="nivelActivo">nivel activo:</label>
+            <input name="nivelActivo" type="text">
+          </form>
+        </spam>
+        <spam style="align-items: center;vertical-align: middle;">
+          <button id="toFileConfig" onclick="toFileConfig('Config')">--></button>
+          <button id="toFormConfig" onclick="toFormConfig('Config')"><--</button>
+        </spam>
+        <spam style="border-color: #777;border-radius: 5px;border: 1px; border-style: solid; float: right;width:45%;">
+          <label for="textConfig" style="margin-top: 10px; margin-bottom: 10px;">fichero configuracion</label>
+          <button style="margin-top: 10px; margin-bottom: 10px; float:right;" id="botonEditarConfig" onclick="botonEdicion('Config')">Editar</button>
+          <br>
+          <textarea id="textConfig" cols="80" rows="35" disabled></textarea>
+          <br>
+        </spam>
+      </div>
+      <!--<div style="clear:both;">
+        <button id="botonEditarConfig" onclick="botonEdicion('Config')">Editar</button>
+        <button id="botonEnviarConfig" onclick="botonEnviar('Config')">Enviar al dispositivo</button>
+      </div>-->
     </div>
     
-    <div id="WiFi" class="tabcontent">
-      <label for="textWiFi">Configuracion de WiFi</label>
-      <textarea id="textWiFi" cols="80" rows="40" disabled></textarea>
-      <!--<iframe id="iframe_entradas" style=" border: 0px solid #ccc; height: 600px;width: 100%;" src=""></iframe>-->
+    <div id="WiFiConfig" class="tabcontent">
+      <br>
+      <label for="textWiFiConfig">Configuracion de WiFi</label>
+      <br>
+      <textarea id="textWiFiConfig" cols="80" rows="40" disabled></textarea>
+      <br>
+      <button id="botonEditarWiFiConfig" onclick="botonEdicion('WiFiConfig')">Editar</button>
+      <button id="botonEnviarWiFiConfig" onclick="botonEnviar('WiFiConfig')">Enviar al dispositivo</button>
+      <!--<button id="botonSalirWiFiConfig" onclick="salir()">Volver</button>-->
     </div>
     
-    <div id="MQTT" class="tabcontent">
-      <label for="textMQTT">Configuracion de MQTT</label>
-      <textarea id="textMQTT" cols="80" rows="40" disabled></textarea>
-      <!--<iframe id="iframe_entradas" style=" border: 0px solid #ccc; height: 600px;width: 100%;" src=""></iframe>-->
+    <div id="MQTTConfig" class="tabcontent">
+      <br>
+      <label for="textMQTTConfig">Configuracion de MQTT</label>
+      <br>
+      <textarea id="textMQTTConfig" cols="80" rows="40" disabled></textarea>
+      <br>
+      <button id="botonEditarMQTTConfig" onclick="botonEdicion('MQTTConfig')">Editar</button>
+      <button id="botonEnviarMQTTConfig" onclick="botonEnviar('MQTTConfig')">Enviar al dispositivo</button>
+      <!--<button id="botonSalirMQTTConfig">Volver</button>-->
     </div>
     
-    <div id="Entradas" class="tabcontent">
-      <label for="textEntradas">Configuracion de Entradas</label>
-      <textarea id="textEntradas" cols="80" rows="40" disabled></textarea>
-      <!--<iframe id="iframe_entradas" style=" border: 0px solid #ccc; height: 600px;width: 100%;" src=""></iframe>-->
+    <div id="EntradasConfig" class="tabcontent">
+      <br>
+      <label for="textEntradasConfig">Configuracion de Entradas</label>
+      <br>
+      <textarea id="textEntradasConfig" cols="80" rows="40" disabled></textarea>
+      <br>
+      <button id="botonEditarEntradasConfig" onclick="botonEdicion('EntradasConfig')">Editar</button>
+      <button id="botonEnviarEntradasConfig" onclick="botonEnviar('EntradasConfig')">Enviar al dispositivo</button>
+      <!--<button id="botonSalirEntradasConfig">Volver</button>-->
     </div>
     
-    <div id="Salidas" class="tabcontent">
-      <label for="textEntradas">Configuracion de Entradas</label>
-      <textarea id="textEntradas" cols="80" rows="40" disabled></textarea>
+    <div id="SalidasConfig" class="tabcontent">
+      <br>
+      <label for="textSalidasConfig">Configuracion de Salidas</label>
+      <br>
+      <textarea id="textSalidasConfig" cols="80" rows="40" disabled></textarea>
+      <br>
+      <button id="botonEditarSalidasConfig" onclick="botonEdicion('SalidasConfig')">Editar</button>
+      <button id="botonEnviarSalidasConfig" onclick="botonEnviar('SalidasConfig')">Enviar al dispositivo</button>
+      <!--<button id="botonSalirSalidasConfig">Volver</button>-->
     </div>
 
     <div id="Variables" class="tabcontent">
-      <label for="textEntradas">Configuracion de Entradas</label>
-      <textarea id="textEntradas" cols="80" rows="40" disabled></textarea>
+      <br>
+      <label for="textVariables">Configuracion de Variables</label>
+      <br>
+      <textarea id="textVariables" cols="80" rows="40" disabled></textarea>
+      <br>
+      <button id="botonEditarVariables" onclick="botonEdicion('Variables')">Editar</button>
+      <button id="botonEnviarVariables" onclick="botonEnviar('Variables')">Enviar al dispositivo</button>
+      <!--<button id="botonSalirVariables">Volver</button>-->
     </div>
-    <!--
-    <div id="Sensores" class="tabcontent">
-      <label for="textEntradas">Configuracion de Entradas</label>
-      <textarea id="textEntradas" cols="80" rows="40" disabled></textarea>
-    </div>
-    -->
     
     <div id="Secuenciador" class="tabcontent">
-      <label for="textEntradas">Configuracion de Entradas</label>
-      <textarea id="textEntradas" cols="80" rows="40" disabled></textarea>
+      <br>
+      <label for="textSecuenciador">Configuracion de Secuenciador</label>
+      <br>
+      <textarea id="textSecuenciador" cols="80" rows="40" disabled></textarea>
+      <br>
+      <button id="botonEditarSecuenciador" onclick="botonEdicion('Secuenciador')">Editar</button>
+      <button id="botonEnviarSecuenciador" onclick="botonEnviar('Secuenciador')">Enviar al dispositivo</button>
+      <!--<button id="botonSalirSecuenciador">Volver</button>-->
     </div>
     
-    <div id="Maq.estados" class="tabcontent">
-      <label for="textEntradas">Configuracion de Entradas</label>
-      <textarea id="textEntradas" cols="80" rows="40" disabled></textarea>
+    <div id="MaqEstadosConfig" class="tabcontent">
+      <br>
+      <label for="textMaqEstadosConfig">Configuracion de Maq. esados</label>
+      <br>
+      <textarea id="textMaqEstadosConfig" cols="80" rows="40" disabled></textarea>
+      <br>
+      <button id="botonEditarMaqEstadosConfig" onclick="botonEdicion('MaqEstadosConfig')">Editar</button>
+      <button id="botonEnviarMaqEstadosConfig" onclick="botonEnviar('MaqEstadosConfig')">Enviar al dispositivo</button>
+      <!--<button id="botonSalirMaqEstadosConfig">Volver</button>-->
     </div>
   </body>
 </html>

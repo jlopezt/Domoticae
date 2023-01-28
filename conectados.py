@@ -35,7 +35,7 @@ class Conectados:
     def busca(self,user):
         for x in self.__conectados:
             if(x['usuario']==user):
-                print(x['usuario'])
+                #print(x['usuario'])
                 return x
 
         return KO
@@ -63,21 +63,9 @@ class Conectados:
         if(x==KO):
             return False
 
-        finValidez = x['expira'] + datetime.timedelta(minutes=timeOut)
-        if (datetime.datetime.now()>finValidez):
-            self.__conectados.remove(x)
-            return False
-        else:
+        if(self.compruebaExpirado(user,timeOut)):
             x['expira']=datetime.datetime.now()
             return True
-
-"""
-def compruebaExpirado(tiempo,timeOut):
-    #Si ahora es mayor de tiempo + timeOut devuelve cierto
-    #si no, devuelve falso
-    finValidez = tiempo + datetime.timedelta(minutes=timeOut)
-    if (datetime.datetime.now()>finValidez):
-        return False
-    else:
-        return True
-"""
+        else:
+            self.__conectados.remove(x)
+            return False

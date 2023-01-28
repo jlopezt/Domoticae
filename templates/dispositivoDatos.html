@@ -6,11 +6,18 @@
     <TITLE>Domoticae</TITLE>    
     <link rel='stylesheet' type='text/css' href='/static/main.css'  media="screen">    
     <link rel="stylesheet" type="text/css" href="/static/css.css"  media="screen">
+    <link rel="stylesheet" type="text/css" href="/static/domoticae.css"  media="screen">
     <script>
+      function inicia(servicio){
+        var servicioInicio='Entradas'
+        document.getElementById(servicioInicio).style.display = "block";
+        cargaFrame(servicioInicio)
+      }
+
       function cargaFrame(tabName) {
         var SSID, myFrame
 
-        console.log("pulso en " + tabName)
+        console.log("Cargo " + tabName)
         SSID=tabName.toLowerCase()
         myFrame = document.getElementById("iframe_" + SSID)
         myFrame.setAttribute("src", "/recuperaDatos/{{USUARIO}}/{{SID}}/" + SSID)  
@@ -31,51 +38,14 @@
         document.getElementById(tabName).style.display = "block";
         evt.currentTarget.className += " active";
       }
+
+      function salir(){
+        history.back()
+      }      
     </script>
-<style>
-  body {font-family: Arial;}
-  
-  /* Style the tab */
-  .tab {
-    overflow: hidden;
-    border: 1px solid #ccc;
-    background-color: #888;
-    color: #000000;
-  }
-  
-  /* Style the buttons inside the tab */
-  .tab button {
-    background-color: inherit;
-    float: left;
-    border: none;
-    outline: none;
-    cursor: pointer;
-    padding: 10px 10px;
-    transition: 0.3s;
-    font-size: 11px;
-  }
-  
-  /* Change background color of buttons on hover */
-  .tab button:hover {
-    background-color: #ddd;
-  }
-  
-  /* Create an active/current tablink class */
-  .tab button.active {
-    background-color: #ccc;
-  }
-  
-  /* Style the tab content */
-  .tabcontent {
-    display: none;
-    padding: 1px 1px;
-    border: 0px solid #ccc;
-    border-top: none;
-  }
-  </style>    
   </head>
 
-  <body class="comun">
+  <body class="comun" onload="inicia('Config')">
     <p>Datos</p>
     <div class="tab">      
       <!--<button class="tablinks" onclick="abreTab(event, 'Entradas')">Entradas</button>-->
@@ -85,6 +55,7 @@
       <button class="tablinks" onclick="abreTab(event, 'Variables')">Variables</button>
       <button class="tablinks" onclick="abreTab(event, 'Secuenciador')">Secuenciador</button>
       <button class="tablinks" onclick="abreTab(event, 'Maq.estados')">Maq.estados</button>
+      <button class="tablinks" style="float: right;" onclick="history.back()">Volver</button>
     </div>
     
     <div id="Entradas" class="tabcontent">

@@ -2,6 +2,7 @@
 <html lang="es">
 	<head>
 		<meta charset="UTF-8">
+		<META http-equiv=refresh content=10>
 		<TITLE>Domoticae</TITLE>
 		<link rel="stylesheet" type="text/css" href="/static/css.css">
 		<script>
@@ -25,7 +26,7 @@
 				<TR id="entrada_{{entrada.id}}" class="modo2">								
 					<TD id="entrada_id_{{entrada.id}}" align="right">{{entrada.id}}</TD>
 					<TD id="entrada_nombre_{{entrada.id}}" align="right">{{entrada.nombre}}</TD>
-					<TD id="entrada_estado_{{entrada.id}}" align="center">{% if entrada.estado=="0" %}"Off"{% else %}"On"{% endif %}</TD>
+					<TD id="entrada_estado_{{entrada.id}}" align="center">{% if entrada.estado==0 %}"Off"{% else %}"On"{% endif %}</TD>
 					<TD id="entrada_nombreEstado_{{entrada.id}}" align="center">{{entrada.nombreEstado}}</TD>				
 				</TR>
 				{% endfor %}

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <title>Domoticae</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!--
+    <link rel="stylesheet" type="text/css" href="/static/css.css" media="screen" />
+    -->
+    <!--
+    <link rel='stylesheet' type='text/css' href='/static/main.css'>
+    -->
+    <link rel='stylesheet' type='text/css' href='/static/inicio.css'>
+    <script>
+      function cambiaDiv() {
+        console.log("Entrando");
+        if (document.getElementById("atras").className.includes("oculto")) {
+          console.log("Atras: " + document.getElementById("atras").className + "mostrando atras");
+          document.getElementById("atras").className = "container visible";
+        } else {
+          console.log("Atras: " + document.getElementById("atras").className + "ocultando atras");
+          document.getElementById("atras").className = "container oculto";
+        }
+
+        if (document.getElementById("delante").className.includes("visible")) {
+          console.log("Delante: " + document.getElementById("delante").className + " Ocultando delante");
+          document.getElementById("delante").className = "container oculto";
+        } else {
+          console.log("Delante: " + document.getElementById("delante").className + " mostrando delante");
+          document.getElementById("delante").className = "container visible";
+        }
+      }
+
+      function inicializa(){
+        //cargo el iframe con al info inicial
+        //cambiaIFrame("static/panel.html");
+        {% if USUARIO=="" %}
+        cambiaIFrame("static/login.html");
+        {% else %}
+        cambiaIFrame("/main");
+        {% endif %}
+
+        //Ajusto la altura del iframe
+        var margen = window.getComputedStyle(document.body,null).getPropertyValue("margin-top");
+        margen = margen.substr(0,margen.length-2);//le quito el px del final
+        var alto = window.innerHeight -
+        (margen*2) -
+        document.getElementById("header").offsetHeight -
+        document.getElementById("nav").offsetHeight -
+        document.getElementById("footer").offsetHeight;
+
+        document.getElementById("article").style.height=alto+"px";         
+      }
+
+      function cambiaIFrame(pagina){
+        //cargo el iframe con la pagina indicada
+        var c=document.getElementById("iframe_a");
+        console.log(c.getAttribute("src"));
+        c.setAttribute("src",pagina);
+      };
+
+      function cambiaPagina(pagina){
+        location.href = pagina;
+      };       
+    </script>
+  </head>
+  <body onload="inicializa();">
+    <header class="header" id="header">
+      <div class="container header-flex-cotariner" id="nombreFamilia">
+        <div class="titulo">
+          <span id="nombre_1">{{ NOMBRE_PRINCIPIO }}</span><span id="nombre_2" style="color:red">{{ NOMBRE_ROJO }}</span><span id="nombre_3">{{ NOMBRE_FINAL }}</span>
+        </div>
+
+        <nav class="navigation" id="nav">
+          <ul id="ul_menu">
+              <li onMouseOver="this.style.cursor='pointer'" onClick='window.open("/","_self")'>Inicio</li>
+              {% if USUARIO != "" %}
+              <li onMouseOver="this.style.cursor='pointer'" onClick='cambiaIFrame("/datosUsuario")'>Datos usuario</li>
+              <li onMouseOver="this.style.cursor='pointer'" onClick='cambiaIFrame("/dispositivos/{{ USUARIO }}")'>Dispositivos</li>
+              {% endif %}
+              <li onMouseOver="this.style.cursor='pointer'" onClick='cambiaIFrame("/cerrarSesion")'>Cerrar sesion</li>
+              <li onMouseOver="this.style.cursor='pointer'" onClick="cambiaDiv()">Cambiar</li>
+          </ul>
+        </nav>
+                
+        <span class="usuario">usuario: {{ USUARIO }}</span>
+
+      </div>
+    </header>
+
+    <main class="main">
+        <div class="container oculto" id="atras">   
+          <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut porttitor dignissim risus. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Curabitur euismod, libero sit amet vestibulum fermentum, risus felis pellentesque risus, accumsan laoreet sapien nulla sed nisl. Quisque tempor augue vel justo pharetra sodales. Nunc laoreet nunc venenatis ante rutrum consequat. Vivamus purus ex, euismod et felis ut, rhoncus condimentum mauris. Fusce sed varius lectus, hendrerit faucibus arcu. Aliquam euismod sollicitudin diam. Sed laoreet eros purus. Aliquam sit amet risus urna. Nullam venenatis, quam a hendrerit euismod, odio est porta orci, vel euismod nulla magna lacinia neque. Aliquam accumsan urna condimentum velit tristique vehicula vitae vitae felis. Praesent interdum interdum tincidunt. Curabitur interdum nulla turpis, nec efficitur metus consectetur eget. Morbi sit amet erat ut augue commodo efficitur. Nunc volutpat suscipit consectetur.
+          <p>
+
+          </p>
+          Vivamus tristique aliquet tempor. Etiam quis sem velit. Morbi interdum sollicitudin enim, et posuere sem facilisis sed. Sed vehicula sagittis convallis. Nulla tristique mi metus. Integer auctor augue eu vestibulum commodo. Aliquam finibus diam metus, in maximus sapien bibendum in.
+          <p>
+            
+          </p>
+          Donec condimentum nisi tellus, id sollicitudin ipsum bibendum quis. Nam lectus dolor, efficitur sed neque eget, porttitor sagittis quam. Aliquam at dui et turpis tempus varius et eget eros. Mauris lectus lacus, facilisis ut efficitur eu, pharetra vitae quam. Phasellus augue lectus, accumsan vitae egestas vel, rhoncus sit amet velit. Pellentesque tempus lectus eu diam euismod sodales. Sed placerat non orci et placerat. Aenean fringilla rutrum molestie. Morbi non elementum ipsum. Pellentesque mattis nunc vitae purus sagittis, eget pretium nibh egestas.
+          <p>
+            
+          </p>
+          Fusce mattis, lorem id efficitur dapibus, magna nulla venenatis tortor, ac vestibulum velit felis lacinia libero. Nullam sit amet rhoncus dolor, a iaculis felis. In cursus, tortor a viverra euismod, nulla mauris semper purus, a mattis massa ipsum et magna. Nullam pretium aliquam tincidunt. Aenean condimentum risus a purus aliquam, nec fringilla ex laoreet. Integer eget tempus erat. Vivamus tincidunt magna vitae ullamcorper dignissim. Pellentesque condimentum mollis lacinia. Vestibulum ut quam sapien.
+          <p>
+            
+          </p>
+          Cras a tortor lobortis, ornare nunc eget, condimentum velit. Sed rutrum, arcu nec aliquam tincidunt, felis libero maximus neque, vel mattis ipsum erat vel diam. Nunc elit ante, semper a sagittis eget, lacinia eget ipsum. Vestibulum euismod viverra orci ac condimentum. In imperdiet dictum ex sed feugiat. In eget risus lectus. Curabitur eu egestas tellus. Pellentesque dapibus vestibulum mauris, vitae malesuada nibh faucibus non.
+          </p>
+        </div>
+        <div class="container visible" id="delante">
+          <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus nec vulputate sem. Suspendisse faucibus massa vitae nunc lacinia malesuada. Nunc auctor mollis sodales. Suspendisse sollicitudin leo et euismod malesuada. Cras lacinia augue risus, id posuere felis egestas sit amet. Nullam ut ex ut sapien laoreet tempus. Suspendisse potenti. Integer et lorem sit amet nisi facilisis lobortis ut volutpat lacus. Cras ultrices lorem id est fringilla, ut maximus dui venenatis. Suspendisse id iaculis lacus.
+          </p>
+          <p>
+          Vivamus sed congue tellus. Praesent nec nunc id orci tempor pharetra quis ut urna. Donec porta a tortor dignissim ultricies. Sed tincidunt neque nec augue efficitur pretium. Curabitur et tellus iaculis orci hendrerit sollicitudin. Sed faucibus tellus tortor, at dignissim mi dignissim nec. Nulla sodales elit at justo luctus elementum. Aliquam sit amet tempus enim. Aliquam vestibulum nibh a sapien tincidunt pharetra. Sed viverra dolor ac orci tincidunt luctus. Nullam eget mauris eget elit convallis vehicula sit amet id metus. Vestibulum in tortor nec eros fermentum porta non sit amet justo. Duis sit amet libero quis leo condimentum euismod. Nunc eu faucibus elit. Proin ligula magna, finibus vel malesuada in, hendrerit sed erat.
+          </p>
+          <p>
+          Nam gravida lectus neque, vitae ullamcorper elit ultrices vel. Morbi quis elit facilisis, facilisis lectus ut, molestie lectus. Cras viverra eros a lacus consequat vulputate. Ut quam nisl, porttitor in ullamcorper at, sollicitudin eu felis. Fusce bibendum rutrum nisi, nec accumsan eros consectetur nec. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum rhoncus nibh id neque tempor interdum. Quisque purus dolor, sollicitudin eu purus in, convallis commodo nibh. Vivamus egestas urna ac quam euismod luctus.
+          </p>
+          <p>
+          Sed ac ultrices tortor, eu convallis arcu. Vestibulum maximus, odio a blandit ultricies, ligula nisl pellentesque diam, a feugiat libero urna in dolor. Pellentesque id metus et nisl gravida fringilla. Aliquam erat volutpat. Nulla eget neque facilisis, egestas metus tempor, convallis turpis. Sed egestas ornare sollicitudin. Donec quis leo a massa imperdiet sagittis. Donec arcu quam, consequat a metus eget, finibus imperdiet massa. Mauris mollis diam eget rhoncus placerat. Suspendisse tincidunt nisl ac justo malesuada porta. Aliquam erat volutpat. Morbi elementum, arcu eu sagittis eleifend, magna dui placerat odio, id consectetur tortor massa ac lectus. Integer vitae nibh metus. Phasellus mauris neque, fermentum vitae commodo sed, eleifend vel arcu. Donec malesuada lacinia magna eu pulvinar. Vivamus auctor pharetra suscipit.
+          </p>
+          <p>
+          Quisque dapibus velit tellus, vitae egestas odio porttitor nec. Quisque posuere, ex quis fringilla sagittis, ex sem congue nulla, vel rhoncus neque tellus in nulla. Phasellus aliquet dictum erat, sit amet finibus ante hendrerit eget. Vivamus ullamcorper euismod quam eget ultricies. Proin accumsan erat justo, ut varius ligula tempus laoreet. Nullam dictum ex tellus, et iaculis risus sollicitudin sit amet. Curabitur libero massa, porta non semper in, fringilla sed dui. Proin molestie odio sed ultricies laoreet.
+          </p>
+          <p>
+          Nulla non ante arcu. Donec eget libero nec eros scelerisque scelerisque. Nam odio lacus, cursus in gravida sed, fermentum ut dolor. Aliquam commodo suscipit nisi. Donec molestie rutrum fermentum. Quisque sapien dui, porta vitae lobortis id, maximus a sem. Donec iaculis justo sed sapien sollicitudin, quis fringilla erat gravida. Maecenas ex diam, facilisis sed tellus eget, imperdiet porta enim. Sed eu lacus tristique, congue tortor ac, rhoncus leo. Vestibulum tempor sagittis accumsan. Nullam semper porttitor cursus. Ut vitae neque sit amet nunc pellentesque ullamcorper eget at magna. Aliquam erat volutpat. Interdum et malesuada fames ac ante ipsum primis in faucibus. Nulla hendrerit vitae felis sit amet vulputate. Curabitur eget nibh vitae justo venenatis feugiat sed sit amet eros. Vivamus commodo porttitor arcu et vulputate. Etiam lobortis, ante vel fringilla rutrum, diam libero luctus neque, et tempor leo odio.
+          </p>
+        </div>
+    </main>
+
+    <footer class="footer" id="footer">
+        <div class="container footer-flex-cotariner" id="version">
+          <p>{{ PIE }} - Código con acentos</p>
+          <a href="https://www.domoticae.com" target="_self">domoticae-2022</a></div>
+    </footer>
+  </body>
+</html>

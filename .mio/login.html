@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <TITLE>Domoticae</TITLE>    
+    <link rel="stylesheet" type="text/css" href="/static/css.css">
+  </head>
+
+  <BODY>
+   <div id="div_login" class="margen visible">
+    <form action="/validaUsuario" method="get">
+        <label for="username">Nombre:</label><br>
+        <input type="text" id="username" name="username"><br><br>
+        <label for="password">Password:</label><br>
+        <input type="password" id="password" name="password"><br><br>
+        <input type="submit" value="Submit">
+      </form>
+    
+    <BR>
+    <a href="static/nuevoUsuario.html">Quiero darme de alta</a>
+    <BR>
+    <BR>
+    <a href="static/reseteaPassword.html">He olvidado mi contraseña</a>
+    </div>
+
+    <div id="atras" class="oculto">
+        <iframe id="iframe_result" name="iframe_result" style="height:80%;width:10%;border:none;"></iframe>
+    </div>   
+  </BODY>
+</HTML>

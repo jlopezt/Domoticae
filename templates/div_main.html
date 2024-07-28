@@ -1,5 +1,21 @@
 <script>
   function inicializaDiv(){}
+
+  function EnviarMQTT(topic,msg){
+    var xhenviaMQTT = new XMLHttpRequest();
+    xhenviaMQTT.onreadystatechange = function() {
+        if (xhenviaMQTT.readyState == 4) {
+        if(xhenviaMQTT.status == 200) {
+            console.log("JSON: " + xhenviaMQTT.responseText)
+            // AQUI VA EL CODIGO QUE GESTIONA LA RESPUESTA              
+            console.log('enviada solicitud de descarga de configuracion')
+            //
+        }
+        }
+    };
+    xhenviaMQTT.open("POST", "/enviaMQTT/{{USUARIO}}?topic=" + topic + "&msg=" + msg, true);
+    xhenviaMQTT.send(null);
+  }  
 </script>
 
 <div id="div_main" class="margen visible">
@@ -24,7 +40,9 @@
       </tr>
     </tbody>     
   </TABLE>
-  <BR><BR>
+  <BR>
+    <button id='botonEnviaMQTT' class="tablinks" onclick="EnviarMQTT('Prueba','Prueba MQTT')">Test MQTT</button>
+  <BR>
   <TABLE class="derecha" id="tabla_dispositivos" border="0" width="80%" cellpadding="0" cellspacing="0" width="300" class="tabla">
     <CAPTION>Dispositivos</CAPTION>
     <tbody id="body_tabla_dispositivos">

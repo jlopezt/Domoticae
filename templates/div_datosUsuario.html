@@ -3,47 +3,50 @@
 </script>
 
 <div class="izquierda">
-    <TABLE id="tabla_dispositivos" border="0" width="80%" cellpadding="0" cellspacing="0" width="300" class="tabla">
-      <CAPTION>Dispositivos del usuario</CAPTION>
-      <tbody id="body_tabla_dispositivos">
+    <TABLE id="tabla_datos" border="0" width="80%" cellpadding="0" cellspacing="0" width="300" class="tabla">
+      <CAPTION>Datos del usuario</CAPTION>
+      <tbody id="body_tabla_datos">
         <tr id="salida_0" class="modo2">
-            <td id="salida_id_0" align="right">Dispositivo 1</td>
-            <td id="salida_id_0" align="left">{{ NOMBRE }}</td>
+            <td align="right">Nombre</td>
+            <td align="left">{{ NOMBRE }}</td>
           </tr>
           <tr id="salida_0" class="modo2">
-            <td id="salida_id_0" align="right">Dispositivo 2</td>
-            <td id="salida_id_0" align="left">{{ APELLIDOS }}</td>
+            <td align="right">Apellidos</td>
+            <td align="left">{{ APELLIDOS }}</td>
           </tr>
           <tr id="salida_0" class="modo2">
-            <td id="salida_id_0" align="right">Dispositivo 3</td>
-            <td id="salida_id_0" align="left">{{ DIRECCION }}</td>
+            <td align="right">Dirección</td>
+            <td align="left">{{ DIRECCION }}</td>
           </tr>
           <tr id="salida_0" class="modo2">
-            <td id="salida_id_0" align="right">Dispositivo 4</td>
-            <td id="salida_id_0" align="left">{{ CORREO }}</td>
+            <td align="right">Correo</td>
+            <td align="left">{{ CORREO }}</td>
           </tr>
           <tr id="salida_0" class="modo2">
-            <td id="salida_id_0" align="right">Dispositivo 5</td>
-            <td id="salida_id_0" align="left">{{ TELEFONO }}</td>
+            <td align="right">Teléfono</td>
+            <td align="left">{{ TELEFONO }}</td>
           </tr>
           <tr id="salida_0" class="modo2">
-            <td id="salida_id_0" align="right">Dispositivo 6</td>
-            <td id="salida_id_0" align="left">{{ USUARIO }}</td>
+            <td align="right">Usuario</td>
+            <td align="left">{{ USUARIO }}</td>
           </tr>
       </tbody>     
   </TABLE>
   <BR><BR>
-    <form id="volver" action="/main" target="_self">
-      <input id="botonVuelve" type="hidden" name="dir" value="">
-    </form>      
+  <form id="volver" action="/main" target="_self">
+    <input id="botonVuelve" type="hidden" name="dir" value="">
+  </form>      
+  <form id="resetPassword" action="/resetPassword/{{ USUARIO }}" method="get">
+    <input id="botonResetPass" type="hidden" value="Reset password">
+  </form>  
   <form id="cambia" action="/editaDatosUsuario/{{ USUARIO }}" method="get">
-    <input type="hidden" value="Edita datos">
+    <input id="botonEditaDatos" type="hidden" value="Edita datos">
   </form>
   <table>
     <tbody>
       <tr>
         <td align="right"><button form="cambia" style="float: right;" type="submit" value="">Edita datos</button></td>
-        <!--<td align="left" ><button form="volver" style="float: right;" type="submit" value="">Volver</button></td>-->
+        <td align="left" ><button form="resetPassword" style="float: right;" type="submit" value="">Reset password</button></td>
       </tr>
     </tbody>     
   </TABLE>    

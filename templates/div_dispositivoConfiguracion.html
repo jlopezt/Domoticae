@@ -14,16 +14,76 @@
             if (xhconfiguracion.readyState == 4) {
             if(xhconfiguracion.status == 200) {
                 console.log("JSON: " + xhconfiguracion.responseText)
-                // AQUI VA EL CODIGO QUE GESTIONA LA RESPUESTA              
+                // AQUI VA EL CODIGO QUE GESTIONA LA RESPUESTA
+                //Relleno el textarea
                 console.log(servicio)
                 text=document.getElementById("text" + servicio)
                 text.value=xhconfiguracion.responseText
-                //
+                //Relleno los campos              
+                rellenaCampos(servicio,xhconfiguracion.responseText)
             }
             }
         };
         xhconfiguracion.open("GET", "/ficheroConfiguracion/{{USUARIO}}/{{SID}}/" + servicio, true);
         xhconfiguracion.send(null); 
+    }
+
+    function rellenaCampos(servicio,res){
+        var res = JSON.parse(res);
+        console.log(res)
+
+        switch (servicio){
+            case 'Config':
+                document.getElementById('nombreDispositivo').value=res.nombre_dispositivo;
+                document.getElementById('nivelActivo').value=res.NivelActivo;
+                document.getElementById('URLPlataforma').value=res.URLPlataforma;
+                break;
+        }
+    }
+
+
+    function toFileConfig(servicio){
+        cajaTexto=document.getElementById('text' + servicio)
+
+        switch(servicio){
+            case 'Config':
+                cad='{'
+                cad+='"nombre_dispositivo"' + ':'
+                cad+='"' + document.getElementById('nombreDispositivo').value + '",'
+                cad+='"NivelActivo"' + ':'
+                cad+=document.getElementById('nivelActivo').value + ','
+                cad+='"URLPlataforma"' + ':'
+                cad+='"' + document.getElementById('URLPlataforma').value + '"'
+                cad+='}' 
+                console.log(cad)
+                j=JSON.parse(cad) 
+                cajaTexto.value=JSON.stringify(j,null,'\t')
+                break;      
+        }
+    }
+
+    function toFormConfig(servicio){
+        cajaTexto=document.getElementById('text' + servicio)
+        j=JSON.parse(cajaTexto.value)
+
+        switch (servicio){
+            case 'Config':
+                document.getElementById('nombreDispositivo').value=j.nombre_dispositivo;
+                document.getElementById('nivelActivo').value=j.NivelActivo;
+                document.getElementById('URLPlataforma').value=j.URLPlataforma
+                break;
+        }
+    }
+
+    function botonEnviarTodos(){
+        botonEnviar('Config');
+        botonEnviar('WiFiConfig');
+        botonEnviar('MQTTConfig');
+        botonEnviar('EntradasConfig');
+        botonEnviar('SalidasConfig');
+        botonEnviar('Variables');
+        botonEnviar('SecuenciadorConfig');
+        botonEnviar('MaqEstadosConfig');
     }
 
     function botonEnviar(servicio){
@@ -54,7 +114,7 @@
             if (xmlhttp.readyState == 4) {
             if(xmlhttp.status == 200) {
                 // AQUI VA EL CODIGO QUE GESTIONA LA RESPUESTA
-                console.log(servicio + ' envido correctamente (' + xmlhttp.status + ')')              
+                console.log(servicio + ' enviado correctamente (' + xmlhttp.status + ')')              
             }
             salir()
             }
@@ -77,12 +137,18 @@
         else{
             //document.getElementById('text' + servicio).disabled=true
             //document.getElementById('botonEditar' + servicio).value='Editar'
-            myForm = document.getElementById('formConfig' + servicio)
+            //myForm = document.getElementById('formConfig' + servicio)
             //myForm.setproperty('action',"/ficheroConfiguracion/{{USUARIO}}/{{SID}}/" + servicio)
             enviaFichero(servicio,document.getElementById('text' + servicio).value)
-        
         }        
     }
+
+    function botonSalvar(servicio){
+        toFileConfig(servicio)
+
+        //myForm = document.getElementById('formConfig' + servicio)
+        enviaFichero(servicio,document.getElementById('text' + servicio).value)
+        }        
 
     function abreTab(evt, tabName) {
         var i, tabcontent, tablinks;
@@ -110,7 +176,7 @@
     }      
 </script>
 
-<p>Configuracion</p>
+<p style="margin-top: 10px;margin-bottom: 10px;">Configuracion</p>
 <div class="tab">
     <button id='botonConfig' class="tablinks" onclick="abreTab(event, 'Config')">Config</button>
     <button id='botonWiFiConfig' class="tablinks" onclick="abreTab(event, 'WiFiConfig')">WiFi</button>
@@ -118,24 +184,34 @@
     <button id='botonEntradasConfig' class="tablinks" onclick="abreTab(event, 'EntradasConfig')">Entradas</button>
     <button id='botonSalidasConfig' class="tablinks" onclick="abreTab(event, 'SalidasConfig')">Salidas</button>
     <button id='botonVariables' class="tablinks" onclick="abreTab(event, 'Variables')">Variables</button>
-    <button id='botonSecuenciador' class="tablinks" onclick="abreTab(event, 'Secuenciador')">Secuenciador</button>
+    <button id='botonSecuenciador' class="tablinks" onclick="abreTab(event, 'SecuenciadorConfig')">Secuenciador</button>
     <button id='botonMaq.Estados' class="tablinks" onclick="abreTab(event, 'MaqEstadosConfig')">Maq.estados</button>
-    <button class="tablinks" style="float: right;" onclick="history.back()">Volver</button>
+
+    <button id='botonVolver' class="tablinks" style="float: right;margin-right: 6px;" onclick="history.back()">Volver</button>
+    <button id='botonTodos' class="tablinks" style="float: right;margin-right: 6px;" onclick="botonEnviarTodos()">Enviar todos</button>
 </div>
 
 <div id="Config" class="tabcontent" style="display: none;">
     <p style="text-align: center;font-size: 28px; background-color: #777;border-color: #777;border-radius: 10px;border: 1px; border-style: solid;">Configuracion de Config</p>
     <div style="clear:both;">
-    <spam style="float: left;border: 3rem;width:45%;">
-        <form style="border-color: #777;border-radius: 5px;border: 1px; border-style: solid;" id="configForm" action="">
-        <p style="margin-top: 10px; margin-bottom: 10px;">
-            <spam>Formulario de configuracion</spam>
-            <spam style="float: right;margin-right: 10px;"><button id="botonEnviarConfig" onclick="botonEnviar('Config')">Enviar al dispositivo</button></spam>
-        </p>
-        <label for="nombreDispositivo">nombre del dispositivo:</label>
-        <input name="nombreDispositivo" type="text"><br><br>
-        <label for="nivelActivo">nivel activo:</label>
-        <input name="nivelActivo" type="text">
+    <spam style="float: left;border: 3rem;width:45%; border-color: #777;border-radius: 5px;border: 1px; border-style: solid;">
+        <form id="configForm" action="">
+            <p style="margin-top: 10px; margin-bottom: 10px; margin-left: 10px;">
+                <spam>Formulario de configuracion</spam>
+                <spam style="float: right;margin-right: 10px;"><button id="botonSalvarConfig" onclick="botonSalvar('Config')">Salvar</button></spam>
+                <BR>
+                <BR>
+                <label for="nombreDispositivo">nombre del dispositivo:</label>
+                <input id="nombreDispositivo" name="nombreDispositivo" type="text"><br>
+                <label for="nivelActivo">nivel activo:</label>
+                <input id="nivelActivo" name="nivelActivo" type="text"><br>
+                <label for="URLPlataforma">URL plataforma:</label>
+                <input id="URLPlataforma" name="URLPlataforma" type="text">        
+                <BR>
+                <BR>
+                <spam style="float: left;margin-left: 10px;"><button id="botonEnviarConfig" onclick="botonEnviar('Config')">Enviar al dispositivo</button></spam>
+                <br>
+            </p>
         </form>
     </spam>
     <spam style="align-items: center;vertical-align: middle;">
@@ -143,10 +219,10 @@
         <button id="toFormConfig" onclick="toFormConfig('Config')"><--</button>
     </spam>
     <spam style="border-color: #777;border-radius: 5px;border: 1px; border-style: solid; float: right;width:45%;">
-        <label for="textConfig" style="margin-top: 10px; margin-bottom: 10px;">fichero configuracion</label>
+        <label for="textConfig" style="margin-top: 10px; margin-bottom: 10px; margin-left: 10px;">fichero configuracion</label>
         <button style="margin-top: 10px; margin-bottom: 10px; float:right;" id="botonEditarConfig" onclick="botonEdicion('Config')">Editar</button>
         <br>
-        <textarea id="textConfig" cols="80" rows="35" disabled></textarea>
+        <textarea id="textConfig" cols="50" rows="35" disabled></textarea>
         <br>
     </spam>
     </div>
@@ -160,7 +236,7 @@
     <br>
     <label for="textWiFiConfig">Configuracion de WiFi</label>
     <br>
-    <textarea id="textWiFiConfig" cols="80" rows="40" disabled></textarea>
+    <textarea id="textWiFiConfig" cols="100" rows="35" disabled></textarea>
     <br>
     <button id="botonEditarWiFiConfig" onclick="botonEdicion('WiFiConfig')">Editar</button>
     <button id="botonEnviarWiFiConfig" onclick="botonEnviar('WiFiConfig')">Enviar al dispositivo</button>
@@ -171,7 +247,7 @@
     <br>
     <label for="textMQTTConfig">Configuracion de MQTT</label>
     <br>
-    <textarea id="textMQTTConfig" cols="80" rows="40" disabled></textarea>
+    <textarea id="textMQTTConfig" cols="100" rows="35" disabled></textarea>
     <br>
     <button id="botonEditarMQTTConfig" onclick="botonEdicion('MQTTConfig')">Editar</button>
     <button id="botonEnviarMQTTConfig" onclick="botonEnviar('MQTTConfig')">Enviar al dispositivo</button>
@@ -182,7 +258,7 @@
     <br>
     <label for="textEntradasConfig">Configuracion de Entradas</label>
     <br>
-    <textarea id="textEntradasConfig" cols="80" rows="40" disabled></textarea>
+    <textarea id="textEntradasConfig" cols="100" rows="35" disabled></textarea>
     <br>
     <button id="botonEditarEntradasConfig" onclick="botonEdicion('EntradasConfig')">Editar</button>
     <button id="botonEnviarEntradasConfig" onclick="botonEnviar('EntradasConfig')">Enviar al dispositivo</button>
@@ -193,7 +269,7 @@
     <br>
     <label for="textSalidasConfig">Configuracion de Salidas</label>
     <br>
-    <textarea id="textSalidasConfig" cols="80" rows="40" disabled></textarea>
+    <textarea id="textSalidasConfig" cols="100" rows="35" disabled></textarea>
     <br>
     <button id="botonEditarSalidasConfig" onclick="botonEdicion('SalidasConfig')">Editar</button>
     <button id="botonEnviarSalidasConfig" onclick="botonEnviar('SalidasConfig')">Enviar al dispositivo</button>
@@ -204,29 +280,29 @@
     <br>
     <label for="textVariables">Configuracion de Variables</label>
     <br>
-    <textarea id="textVariables" cols="80" rows="40" disabled></textarea>
+    <textarea id="textVariables" cols="100" rows="35" disabled></textarea>
     <br>
     <button id="botonEditarVariables" onclick="botonEdicion('Variables')">Editar</button>
     <button id="botonEnviarVariables" onclick="botonEnviar('Variables')">Enviar al dispositivo</button>
     <!--<button id="botonSalirVariables">Volver</button>-->
 </div>
 
-<div id="Secuenciador" class="tabcontent" style="display: none;">
+<div id="SecuenciadorConfig" class="tabcontent" style="display: none;">
     <br>
-    <label for="textSecuenciador">Configuracion de Secuenciador</label>
+    <label for="textSecuenciadorConfig">Configuracion de Secuenciador</label>
     <br>
-    <textarea id="textSecuenciador" cols="80" rows="40" disabled></textarea>
+    <textarea id="textSecuenciadorConfig" cols="100" rows="35" disabled></textarea>
     <br>
-    <button id="botonEditarSecuenciador" onclick="botonEdicion('Secuenciador')">Editar</button>
-    <button id="botonEnviarSecuenciador" onclick="botonEnviar('Secuenciador')">Enviar al dispositivo</button>
-    <!--<button id="botonSalirSecuenciador">Volver</button>-->
+    <button id="botonEditarSecuenciadorConfig" onclick="botonEdicion('SecuenciadorConfig')">Editar</button>
+    <button id="botonEnviarSecuenciadorConfig" onclick="botonEnviar('SecuenciadorConfig')">Enviar al dispositivo</button>
+    <!--<button id="botonSalirSecuenciadorConfig">Volver</button>-->
 </div>
 
 <div id="MaqEstadosConfig" class="tabcontent" style="display: none;">
     <br>
     <label for="textMaqEstadosConfig">Configuracion de Maq. esados</label>
     <br>
-    <textarea id="textMaqEstadosConfig" cols="80" rows="40" disabled></textarea>
+    <textarea id="textMaqEstadosConfig" cols="100" rows="35" disabled></textarea>
     <br>
     <button id="botonEditarMaqEstadosConfig" onclick="botonEdicion('MaqEstadosConfig')">Editar</button>
     <button id="botonEnviarMaqEstadosConfig" onclick="botonEnviar('MaqEstadosConfig')">Enviar al dispositivo</button>

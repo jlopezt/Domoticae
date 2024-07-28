@@ -5,3 +5,4 @@ domoticae.code-workspace
 __pycache__/*.pyc
 usuarios/*
 nohup.out
+__pycache__/conectados.cpython-37.pyc

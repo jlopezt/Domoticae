@@ -3,7 +3,6 @@ from hashlib import md5
 from werkzeug.utils import secure_filename
 from markupsafe import escape
 from flask_mqtt import Mqtt # Solo se usa para enviar. pendiente utilizar para recibir.https://flask-mqtt.readthedocs.io/en/latest/usage.html
-from flask_mqtt import Mqtt # Solo se usa para enviar. pendiente utilizar para recibir.https://flask-mqtt.readthedocs.io/en/latest/usage.html
 from html import unescape
 
 import requests as outputRequests
@@ -45,8 +44,6 @@ app = Flask(__name__)
 #************************************************* GUI usuario *************************************************************
 @app.route('/')
 def raiz():
-    pagina = 'div_login.html'
-    
     pagina = 'div_login.html'
     
     usuario = request.cookies.get('userID')

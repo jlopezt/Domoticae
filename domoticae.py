@@ -3,6 +3,7 @@ from hashlib import md5
 from werkzeug.utils import secure_filename
 from markupsafe import escape
 from flask_mqtt import Mqtt # Solo se usa para enviar. pendiente utilizar para recibir.https://flask-mqtt.readthedocs.io/en/latest/usage.html
+from flask_mqtt import Mqtt # Solo se usa para enviar. pendiente utilizar para recibir.https://flask-mqtt.readthedocs.io/en/latest/usage.html
 from html import unescape
 
 import requests as outputRequests
@@ -46,6 +47,8 @@ app = Flask(__name__)
 def raiz():
     pagina = 'div_login.html'
     
+    pagina = 'div_login.html'
+    
     usuario = request.cookies.get('userID')
     if not usuario:
         usuario=""
@@ -73,6 +76,7 @@ def datosUsuario():
 
     usuarioValidado = dameUsuario(usuario)
 
+
     delante = render_template('div_datosUsuario.html',NOMBRE=usuarioValidado['Nombre'], APELLIDOS=usuarioValidado['Apellidos'], CORREO=usuarioValidado['Correo'], TELEFONO=usuarioValidado['Telefono'], DIRECCION=usuarioValidado['Direccion'], USUARIO=usuarioValidado['Usuario'])
     detras = ""
     return render_template('inicio.html', DELANTE=delante, DETRAS=detras,NOMBRE_PRINCIPIO=nombrePrincipio, NOMBRE_ROJO=nombreRojo, NOMBRE_FINAL=nombreFinal, PRINCIPIO=principio, ROJO=rojo, FINAL=final, PIE=pie, USUARIO=usuario)
@@ -89,6 +93,10 @@ def debug2():
 def debug3():
     return request.cookies.get('userID')
 
+@app.route('/debug3')
+def debug3():
+    return request.cookies.get('userID')
+
 @app.route('/validaUsuario')
 def validarUsuario():
     result = 0
@@ -96,6 +104,7 @@ def validarUsuario():
     password_txt = str(request.args.get('password'))
     password = md5(password_txt.encode("utf-8")).hexdigest()
 
+    print("usuario: " + username + " password txt: " + password_txt + " password: " + password)
     print("usuario: " + username + " password txt: " + password_txt + " password: " + password)
 
     sql = "select Nombre, Apellidos, Correo, Telefono, Direccion_ppal from Usuarios where Usuario = '" + username + "' and Password='" + password + "'"
@@ -154,6 +163,7 @@ def cerrarSesion():
     usuarioValidado["Usuario"] = ""
 
     resp = redirect('/', code=302)
+    resp = redirect('/', code=302)
     resp.set_cookie("userID","")
     return resp
 
@@ -194,6 +204,7 @@ def crearUsuario():
     correo = str(request.args.get('correo'))
     telefono = str(request.args.get('telefono'))
     direccion = str(request.args.get('direccion'))
+    username = str(request.args.get('usuario'))
     username = str(request.args.get('usuario'))
     password_txt = str(request.args.get('password'))
     password = md5(password_txt.encode("utf-8")).hexdigest()
@@ -241,12 +252,15 @@ def actualizaUsuario(usuario):
     username = request.cookies.get('userID')
     if not username:
         return redirect('/',302) 
+        return redirect('/',302) 
     else:        
         if(usuariosConectados.renueva(usuario,timeOutSesion)==False):
             username=""
             return redirect ('/',302)
+            return redirect ('/',302)
 
     if(usuario!=username):
+        return redirect ('/',302)
         return redirect ('/',302)
 
     nombre = str(request.args.get('nombre'))
@@ -319,7 +333,51 @@ def resetPassword(usuario):
     resp.set_cookie("userID",usuarioValidado['Usuario'])
     return resp
 
+
+@app.route('/resetPassword/<string:usuario>')
+def resetPassword(usuario):
+    username = request.cookies.get('userID')
+    if not username:
+        print("Not username")
+        return redirect('/',302) 
+    else:        
+        if(usuariosConectados.renueva(usuario,timeOutSesion)==False):
+            print("Not connected")
+            username=""
+            return redirect ('/',302)
+
+    if(usuario!=username):
+        print("Username not match")
+        return redirect ('/',302)
+
+    password_txt = str(request.args.get('password_txt'))
+    password = md5(password_txt.encode("utf-8")).hexdigest()    
+
+    print("password: " + password)
+    
+    sql = "update Usuarios set Password='" + password + "' where Usuario='" + usuario + "'"
+    print ("Consulta: " + sql)
+    
+    try:
+        cursor.execute(sql)
+        db.commit()
+
+    except Exception as e: 
+        print(e)  
+        db.rollback()
+        print("Error en la consulta")
+        return render_template('mensaje.html', MENSAJE = "Error al resetear contraseña.", SECUNDARIO = "Todo KO")
+
+    usuarioValidado = dameUsuario(usuario)
+
+    resp = redirect('/datosUsuario', code=302)
+    resp.set_cookie("userID",usuarioValidado['Usuario'])
+    return resp
+
     #************************************************* fin usuario *************************************************************
+    #*************************************************
+    #*************************************************
+    #************************************************* 
     #*************************************************
     #*************************************************
     #************************************************* 
@@ -336,12 +394,15 @@ def dispositivosUsuario(usuario):
         #username=""
         print('Salgo por aqui')
         return redirect("/", code=302)
+        return redirect("/", code=302)
     else:        
         if(usuariosConectados.renueva(usuario,timeOutSesion)==False):
             username=""
             return redirect("/", code=302)
+            return redirect("/", code=302)
 
     if(usuario!=username):
+        return redirect("/", code=302)
         return redirect("/", code=302)
 
     sql='select SID,DID,validado from Dispositivos where CID="' + usuario + '" order by SID'
@@ -364,6 +425,9 @@ def dispositivosUsuario(usuario):
 @app.route('/dispositivo/<string:DID>', methods = ['POST','GET','DELETE'])
 def dispositivo(DID):
     print('Entrando en dispositivo')
+    delante=''
+    detras=''
+    
     delante=''
     detras=''
     
@@ -426,6 +490,7 @@ def dispositivo(DID):
         print('Ha llegado a DELETE')
         borraDeviceID(DID)
 
+
         delante = make_response("Borrado",200)
         detras = ''
 
@@ -433,6 +498,12 @@ def dispositivo(DID):
 
     #************************************************* fin dispositivos ********************************************************
 #************************************************* GUI usuario *************************************************************
+#*************************************************
+#*************************************************
+#*************************************************
+#*************************************************
+#*************************************************
+#************************************************* 
 #*************************************************
 #*************************************************
 #*************************************************
@@ -476,6 +547,7 @@ def configuracion(usuario,nombreDevice,servicio):
         nombreFichero += str(servicio + '.json')
 
         print('se guardara en ' + nombreFichero)
+
 
         cad = request.data #request.get_json(True)
         print('conenido decoded: -->' + cad.decode('utf-8') + '<--')
@@ -692,6 +764,7 @@ def descargaConfig(usuario,SID,SSID):
     }
 
     topic = app.config['pubTopicRoot'] + '/' + usuario + '/' + SID + '/buzon'
+    topic = app.config['pubTopicRoot'] + '/' + usuario + '/' + SID + '/buzon'
     publish_result = mqtt_client.publish(topic, json.dumps(msg))
     print(publish_result)
 
@@ -727,7 +800,44 @@ def enviaMQTT(usuario):
     #print(publish_result)
 
     return make_response("Codigo de retorno:" + str(publish_result[0]), 200)
+
+@app.route('/enviaMQTT/<string:usuario>', methods=['POST'])
+def enviaMQTT(usuario):
+    username = request.cookies.get('userID')
+    print('usuario de la cookie: ' + username)
+    print('usuario recbido: ' + usuario)
+
+    if not username:
+        #username=""
+        print('Salgo por aqui')
+        #return make_response('',401)
+        return redirect("/", code=302)
+    else:        
+        if(usuariosConectados.renueva(usuario,timeOutSesion)==False):
+            username=""
+            #return make_response('',402)
+            return redirect("/", code=302)
+
+    if(usuario!=username):
+        #return make_response('motivo: ' + usuario + '!=' + username,405)
+        return redirect("/", code=302)
+    
+    myTopic=request.args.get('topic')
+    msg=request.args.get('msg')
+
+    topic = app.config['pubTopicRoot'] + '/' + usuario + '/' + myTopic
+    print("A enviar:\ntopic:" + topic + "\nmensage:" + msg)
+    publish_result = mqtt_client.publish(topic, msg)
+    #print(publish_result)
+
+    return make_response("Codigo de retorno:" + str(publish_result[0]), 200)
 #************************************************* API *************************************************************
+#*************************************************
+#*************************************************
+#*************************************************
+#*************************************************
+#*************************************************
+#*************************************************     
 #*************************************************
 #*************************************************
 #*************************************************
@@ -881,7 +991,12 @@ def handle_connect(client, userdata, flags, rc):
 
        ret=mqtt_client.subscribe(app.config['subTopicRoot'] + '/#') # subscribe topic
        print("subscrito al topic: " + app.config['subTopicRoot']  + "/#")
+       print('Conectado al bus MQTT')
+
+       ret=mqtt_client.subscribe(app.config['subTopicRoot'] + '/#') # subscribe topic
+       print("subscrito al topic: " + app.config['subTopicRoot']  + "/#")
    else:
+       print('No se pudo conectar con el bus MQTT. Codigo de error:', rc)
        print('No se pudo conectar con el bus MQTT. Codigo de error:', rc)
 
 @mqtt_client.on_message()
@@ -1031,6 +1146,10 @@ if __name__ == "__main__":
         else: app.config['pubTopicRoot']=""
         if "subTopic" in MQTT: app.config['subTopicRoot'] = MQTT["subTopic"]
         else: app.config['subTopicRoot']=""
+        if "pubTopic" in MQTT: app.config['pubTopicRoot'] = MQTT["pubTopic"]
+        else: app.config['pubTopicRoot']=""
+        if "subTopic" in MQTT: app.config['subTopicRoot'] = MQTT["subTopic"]
+        else: app.config['subTopicRoot']=""
 
         app.config['MQTT_KEEPALIVE'] = 5  # Set KeepAlive time in seconds
         app.config['MQTT_TLS_ENABLED'] = False  # If your server supports TLS, set it True
@@ -1041,7 +1160,9 @@ if __name__ == "__main__":
         # app.config['MQTT_TLS_CA_CERTS'] = 'ca.crt'
         
         print("Configuracion MQTT\nbroker: [" + str(app.config['MQTT_BROKER_URL']) + "]\npuerto: [" + str(app.config['MQTT_BROKER_PORT']) + "]\nusuario: [" + str(app.config['MQTT_USERNAME']) + "]\npass: [" + str(app.config['MQTT_PASSWORD']) + "]\npub topic root: [" + str(app.config['pubTopicRoot']) + "]\nsub topic root: [" + str(app.config['subTopicRoot']) + "]")
+        print("Configuracion MQTT\nbroker: [" + str(app.config['MQTT_BROKER_URL']) + "]\npuerto: [" + str(app.config['MQTT_BROKER_PORT']) + "]\nusuario: [" + str(app.config['MQTT_USERNAME']) + "]\npass: [" + str(app.config['MQTT_PASSWORD']) + "]\npub topic root: [" + str(app.config['pubTopicRoot']) + "]\nsub topic root: [" + str(app.config['subTopicRoot']) + "]")
 
+        mqtt_client.init_app(app)
         mqtt_client.init_app(app)
 
         #Config de presentacion
@@ -1049,6 +1170,7 @@ if __name__ == "__main__":
         nombre=raiz["nombre"]
         cabecera = raiz["cabecera"]
         pie = raiz["pie"]
+        
         
         #nombre
         i=0

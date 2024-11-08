@@ -24,7 +24,7 @@
 				</TR>
 				<!--Una fila por cada entrada--> 
 				{% for entrada in REGISTROS %}
-				<TR id="entrada_{{entrada.id}}" class="modo2">								
+				<TR id="entrada_{{entrada.id}}" class="modo2">
 					<TD id="entrada_id_{{entrada.id}}" align="right">{{entrada.id}}</TD>
 					<TD id="entrada_nombre_{{entrada.id}}" align="right">{{entrada.nombre}}</TD>
 					<TD id="entrada_estado_{{entrada.id}}" align="center">{% if entrada.estado==0 %}"Off"{% else %}"On"{% endif %}</TD>

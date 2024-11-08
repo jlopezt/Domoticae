@@ -12,27 +12,39 @@
 		</script>
 	</HEAD>
 	<BODY onload="inicializa();">
-		<TABLE id="tabla_secuenciador" border="0" width="100%" cellpadding="0" cellspacing="0" width="300" class="tabla">
-			<CAPTION>estado del secuenciador: = ON/OFF</CAPTION>
-		</TABLE>
-		<br>
-		<TABLE id="tabla_planes" border="0" width="100%" cellpadding="0" cellspacing="0" width="300" class="tabla">
-			<CAPTION>planes</CAPTION>
-			<tbody id="body_tabla_planes">
-				<TR>
-					<th width='10%'>id</th>
-					<th width='40%'>Nombre</th>
-					<th width='30%'>estado</th>
-				</TR>
-				<!--Una fila por cada entrada--> 
-				{% for planes in REGISTROS %}
-				<TR id="planes_{{planes.id}}" class="modo2">								
-					<TD id="planes_id_{{planes.id}}" align="right">{{planes.id}}</TD>
-					<TD id="planes_nombre_{{planes.id}}" align="right">{{planes.nombre}}</TD>
-					<TD id="planes_estado_{{planes.id}}" align="center">{{ planes.estdo }}</TD>
-				</TR>
-				{% endfor %}
-			</tbody>     
-		</TABLE>
-	</BODY>
+		{% for reg in REGISTROS%}
+			<TABLE id="tabla_secuenciador" border="0" width="100%" cellpadding="0" cellspacing="0" width="300" class="tabla">
+				<CAPTION>estado del secuenciador: = ON/OFF</CAPTION>
+				<tbody id="body_tabla_estadoActual">
+					<tr>
+						<TH style="text-align: center;" width="50%">Estado</TD>                    
+						<TD class="modo2" id="estado" style="text-align: center;">
+							{% if reg.estado==0 %}"Off"{% else %}"On"{% endif %}
+						</TD>
+					</tr>
+				</tbody>		
+			</TABLE>
+			<br>
+			<TABLE id="tabla_planes" border="0" width="100%" cellpadding="0" cellspacing="0" width="300" class="tabla">
+				<CAPTION>planes</CAPTION>
+				<tbody id="body_tabla_planes">
+					<TR>
+						<th width='10%'>id</th>
+						<th width='40%'>Nombre</th>
+						<th width='30%'>estado</th>
+					</TR>
+					<!--Una fila por cada entrada--> 
+                    {% if 'datos' in reg%}					
+						{% for planes in reg['datos'] %}
+						<TR id="planes_{{planes.id}}" class="modo2">								
+							<TD id="planes_id_{{planes.id}}" align="right">{{planes.id}}</TD>
+							<TD id="planes_nombre_{{planes.id}}" align="right">{{planes.nombre}}</TD>
+							<TD id="planes_estado_{{planes.id}}" align="center">{{ planes.estdo }}</TD>
+						</TR>
+						{% endfor %}
+					{% endif %}
+				</tbody>     
+			</TABLE>
+		{% endfor %}
+		</BODY>
 </HTML>

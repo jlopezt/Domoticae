@@ -90,10 +90,6 @@ def debug2():
 def debug3():
     return request.cookies.get('userID')
 
-@app.route('/debug3')
-def debug3():
-    return request.cookies.get('userID')
-
 @app.route('/validaUsuario')
 def validarUsuario():
     result = 0
@@ -101,7 +97,6 @@ def validarUsuario():
     password_txt = str(request.args.get('password'))
     password = md5(password_txt.encode("utf-8")).hexdigest()
 
-    print("usuario: " + username + " password txt: " + password_txt + " password: " + password)
     print("usuario: " + username + " password txt: " + password_txt + " password: " + password)
 
     sql = "select Nombre, Apellidos, Correo, Telefono, Direccion_ppal from Usuarios where Usuario = '" + username + "' and Password='" + password + "'"
@@ -249,15 +244,12 @@ def actualizaUsuario(usuario):
     username = request.cookies.get('userID')
     if not username:
         return redirect('/',302) 
-        return redirect('/',302) 
     else:        
         if(usuariosConectados.renueva(usuario,timeOutSesion)==False):
             username=""
             return redirect ('/',302)
-            return redirect ('/',302)
 
     if(usuario!=username):
-        return redirect ('/',302)
         return redirect ('/',302)
 
     nombre = str(request.args.get('nombre'))
@@ -289,47 +281,6 @@ def actualizaUsuario(usuario):
     resp = redirect('/datosUsuario', code=302)
     resp.set_cookie("userID",usuarioValidado['Usuario'])
     return resp
-
-@app.route('/resetPassword/<string:usuario>')
-def resetPassword(usuario):
-    username = request.cookies.get('userID')
-    if not username:
-        print("Not username")
-        return redirect('/',302) 
-    else:        
-        if(usuariosConectados.renueva(usuario,timeOutSesion)==False):
-            print("Not connected")
-            username=""
-            return redirect ('/',302)
-
-    if(usuario!=username):
-        print("Username not match")
-        return redirect ('/',302)
-
-    password_txt = str(request.args.get('password_txt'))
-    password = md5(password_txt.encode("utf-8")).hexdigest()    
-
-    print("password: " + password)
-    
-    sql = "update Usuarios set Password='" + password + "' where Usuario='" + usuario + "'"
-    print ("Consulta: " + sql)
-    
-    try:
-        cursor.execute(sql)
-        db.commit()
-
-    except Exception as e: 
-        print(e)  
-        db.rollback()
-        print("Error en la consulta")
-        return render_template('mensaje.html', MENSAJE = "Error al resetear contraseña.", SECUNDARIO = "Todo KO")
-
-    usuarioValidado = dameUsuario(usuario)
-
-    resp = redirect('/datosUsuario', code=302)
-    resp.set_cookie("userID",usuarioValidado['Usuario'])
-    return resp
-
 
 @app.route('/resetPassword/<string:usuario>')
 def resetPassword(usuario):
@@ -425,9 +376,6 @@ def dispositivo(DID):
     delante=''
     detras=''
     
-    delante=''
-    detras=''
-    
     usuario = dameUsuarioDispositivo(DID)
 
     if usuario=='':
@@ -479,6 +427,27 @@ def dispositivo(DID):
         elif(accion=="configuracion"):
             delante = render_template('/div_dispositivoConfiguracion.html',USUARIO=usuario,SID=dameNombreDispositivo(DID))
             detras = ''
+        elif(accion=="reiniciar"):
+            #Envia mensaje al disp anunciando que debe reiniciarse
+            msg = {
+                "tipo":"utilidad",
+                "subtipo":"restart",
+                "orden":"",
+                "id": 0,
+                "valor": ""
+                }
+
+            SID=dameNombreDispositivo(DID)
+            topic = app.config['pubTopicRoot'] + '/' + usuario + '/' + SID + '/buzon'
+            print('topic: ' + topic)
+            print('mensaje: ' + json.dumps(msg))
+            publish_result = mqtt_client.publish(topic, json.dumps(msg))
+            print(publish_result)
+            
+            #flash('Soicitud de reinicio enviada a ' + SID)
+            #return redirect("/dispositivos/" + usuario, code=302)            
+            delante = render_template('div_mensaje.html', MENSAJE = "Orden de reinicio enviada al dspositivo " + SID, SECUNDARIO = "Todo KO")
+            detras = ''
         else:
             delante = make_response("",400)
             detras = ''
@@ -494,6 +463,39 @@ def dispositivo(DID):
     return render_template('inicio.html', DELANTE=delante, DETRAS=detras,NOMBRE_PRINCIPIO=nombrePrincipio, NOMBRE_ROJO=nombreRojo, NOMBRE_FINAL=nombreFinal, PRINCIPIO=principio, ROJO=rojo, FINAL=final, PIE=pie, USUARIO=usuario)  
 
     #************************************************* fin dispositivos ********************************************************
+    #************************************************* Web Actuador ********************************************************
+@app.route('/webActuador/', methods=['GET'])
+@app.route('/webActuador/<string:DID>/', methods=['GET'])
+def webActuador(DID=""):
+    usuario = request.cookies.get('userID')
+    if not usuario:
+        print("---------------->Sin cookie")
+        return redirect('/',302)
+    else:        
+        if(usuariosConectados.renueva(usuario,timeOutSesion)==False):
+            print("---------------->No se puede renovar")
+            return redirect('/',302)
+
+    #usuarioValidado = dameUsuario(usuario)
+    '''
+    usuario = dameUsuarioDispositivo(DID)
+
+    if usuario=='':
+        pass #Vamos a / sin cookie
+
+    if validaSesion(usuario)!=OK:
+        return redirect('/',302)
+    '''
+
+    SID=dameNombreDispositivo(DID)
+    if(SID==""): SID="Test1"
+        
+    delante = render_template('root.html',SID=SID)
+    detras = ""
+    return render_template('inicio.html', DELANTE=delante, DETRAS=detras,NOMBRE_PRINCIPIO=nombrePrincipio, NOMBRE_ROJO=nombreRojo, NOMBRE_FINAL=nombreFinal, PRINCIPIO=principio, ROJO=rojo, FINAL=final, PIE=pie, USUARIO=usuario)
+    
+    #************************************************* fin Web Actuador ********************************************************
+    
 #************************************************* GUI usuario *************************************************************
 #*************************************************
 #*************************************************
@@ -594,6 +596,10 @@ def asocia(usuario,deviceID):
         if not tipoDispositivo:
             return make_response('tipoDispositivo no valido',404)
         
+        versionDispositivo=request.args.get('version')
+        if not versionDispositivo:
+            versionDispositivo=""
+
         #Compruebo si el dispositivo ya existe
         sql = "select * from Dispositivos where DID='" + deviceID + "'"
         print ("Consulta: " + sql)
@@ -612,7 +618,7 @@ def asocia(usuario,deviceID):
                     print("Contrasena txt: " + contrasena_txt)
                     contrasena = md5(contrasena_txt.encode("utf-8")).hexdigest()
 
-                    sql = "insert into Dispositivos (DID,SID,CID,Contrasena,DeviceType) values ('" + deviceID + "','" + nombreServicio + "','" + usuario + "','" + contrasena + "','" + tipoDispositivo + "')"
+                    sql = "insert into Dispositivos (DID,SID,CID,Contrasena,DeviceType,version) values ('" + deviceID + "','" + nombreServicio + "','" + usuario + "','" + contrasena + "','" + tipoDispositivo + "','" + versionDispositivo + "')"
                     print ("Consulta: " + sql)
                     cursor.execute(sql)
                     db.commit()
@@ -632,11 +638,11 @@ def asocia(usuario,deviceID):
                         return make_response('El dispositivo ya existe, asignado a ese usuario con otro nombre ' + registro["SID"], 406) #El dispositivo esta pero con otro nombre
                 else:
                     return make_response('El dispositivo ya existe, asignado a otro usuario', 401) #El dispositivo esta pero con otro usuario
-                
+        
         except Exception as e: 
             print(e)  
             return make_response('Error SQL',500)
-
+        
     #GET
     elif request.method == 'GET': 
         try:
@@ -743,6 +749,11 @@ def recuperaDatos(usuario,nombreDevice,SSID):
     
     datos=cursor.fetchone()
     registros=json.loads(datos["Dato"])
+
+    if SSID in ['maquinaestados','secuenciador']:
+        registros={"datos":[registros]}
+    
+    print(registros["datos"])
     print(len(registros["datos"]))
 
     #elijo el template
@@ -760,7 +771,6 @@ def descargaConfig(usuario,SID,SSID):
 	"valor": SSID
     }
 
-    topic = app.config['pubTopicRoot'] + '/' + usuario + '/' + SID + '/buzon'
     topic = app.config['pubTopicRoot'] + '/' + usuario + '/' + SID + '/buzon'
     publish_result = mqtt_client.publish(topic, json.dumps(msg))
     print(publish_result)
@@ -798,36 +808,70 @@ def enviaMQTT(usuario):
 
     return make_response("Codigo de retorno:" + str(publish_result[0]), 200)
 
-@app.route('/enviaMQTT/<string:usuario>', methods=['POST'])
-def enviaMQTT(usuario):
-    username = request.cookies.get('userID')
-    print('usuario de la cookie: ' + username)
-    print('usuario recbido: ' + usuario)
-
-    if not username:
-        #username=""
-        print('Salgo por aqui')
-        #return make_response('',401)
-        return redirect("/", code=302)
-    else:        
-        if(usuariosConectados.renueva(usuario,timeOutSesion)==False):
-            username=""
-            #return make_response('',402)
-            return redirect("/", code=302)
-
-    if(usuario!=username):
-        #return make_response('motivo: ' + usuario + '!=' + username,405)
-        return redirect("/", code=302)
+@app.route('/<string:SID>/<string:servicio>', methods=['GET'])
+def nombreDispositivoAPI(SID,servicio):
+    cursor2 = db.cursor(MySQLdb.cursors.DictCursor)
+    """
+    #Compruebo el nombreServicio
+    SID=request.args.get('SID')        
+    if not SID:
+        return make_response('Nombre no valido',404)
+    """    
+    servicioDatos={
+            "estadoEntradas":"entradas",
+            "estadoSalidas":"salidas",
+            "estadoSecuenciador":"secuenciador",
+            "estadoMaquinaEstados":"maquinaEstados",
+            "estadoVariables":"Variables"
+            }
+    cad=""
+    resp={}
     
-    myTopic=request.args.get('topic')
-    msg=request.args.get('msg')
+    if servicio=="nombre":
+        #Consulto el SID en la bd
+        sql = "select SID, DeviceType,Version from Dispositivos where SID='" + SID +"'"
+        print ("Consulta: " + sql)
+        cursor2.execute(sql)
+        
+        if(cursor2.rowcount>0):
+            registro = cursor2.fetchone()
+            
+            resp = {
+                "nombreDispositivo": registro["SID"],
+                "nombreFamilia": registro["DeviceType"],
+                "version": registro["Version"]
+            }
+        cad=json.dumps(resp)
+        
+    elif servicio=="servicios":
+        #Consulto el SID en la bd
+        sql = "select SSID from Datos where SID='" + SID +"'"
+        print ("Consulta: " + sql)
+        cursor2.execute(sql)
+        
+        if(cursor2.rowcount>0):
+            registro = cursor2.fetchall()
+            
+        datos=[]
+        for x in registro:        
+            datos.append(x["SSID"])
+        
+        resp["datos"]=datos
+        cad=json.dumps(resp)
+        
+    elif servicio in servicioDatos:
+        #Consulto el SID y el servicio en la bd
+        sql = "select Dato from Datos where SID='" + SID + "' and SSID='" + servicioDatos[servicio] + "'"
+        print ("Consulta: " + sql)
+        cursor2.execute(sql)
+        
+        if(cursor2.rowcount>0):
+            registro = cursor2.fetchone()
+            cad=registro["Dato"]
+            cursor2.fetchall()
 
-    topic = app.config['pubTopicRoot'] + '/' + usuario + '/' + myTopic
-    print("A enviar:\ntopic:" + topic + "\nmensage:" + msg)
-    publish_result = mqtt_client.publish(topic, msg)
-    #print(publish_result)
-
-    return make_response("Codigo de retorno:" + str(publish_result[0]), 200)
+    cursor2.close()
+    return Response(response=cad, status=200, mimetype="application/json")
 #************************************************* API *************************************************************
 #*************************************************
 #*************************************************
@@ -985,22 +1029,16 @@ def validaDeviceID(DID):
 def handle_connect(client, userdata, flags, rc):
    if rc == 0:
        print('Conectado al bus MQTT')
-
-       ret=mqtt_client.subscribe(app.config['subTopicRoot'] + '/#') # subscribe topic
-       print("subscrito al topic: " + app.config['subTopicRoot']  + "/#")
-       print('Conectado al bus MQTT')
-
+       
        ret=mqtt_client.subscribe(app.config['subTopicRoot'] + '/#') # subscribe topic
        print("subscrito al topic: " + app.config['subTopicRoot']  + "/#")
    else:
-       print('No se pudo conectar con el bus MQTT. Codigo de error:', rc)
        print('No se pudo conectar con el bus MQTT. Codigo de error:', rc)
 
 @mqtt_client.on_message()
 def handle_mqtt_message(client, userdata, message):    
     try:
         #print("recibido= topic:" + message.topic + " | mensaje: " + str(message.payload).decode("utf-8"))
-        #print("recibido. topic:" + message.topic)
 
         topics = str(message.topic).split('/')
 
@@ -1021,7 +1059,7 @@ def handle_mqtt_message(client, userdata, message):
         SSID = topics[3] #Sub service ID
 
         #Filtro los SSID que no se almacenan en la BD, por ejemplo will
-        if (SSID in ["will","NULL"]):
+        if (SSID in ["will","NULL","humbrales","buzon"]):
             #print("Se descarta ", SSID)
             return OK
 
@@ -1048,12 +1086,18 @@ def handle_mqtt_message(client, userdata, message):
 
         #compruebo si es el primer dato (=Insert) o ya hay datos para ese servicio (=update)
         sql="select * from Datos where SSID='" + SSID + "' and SID='" + SID + "' and CID='" + CID + "'"
-        #print("consulta: ", sql)
+        #print("consulta: " + sql, file=sys.stderr)
 
         timeStamp=time.strftime("%Y-%m-%d %I:%M:%S")
 
         cursor.execute(sql)
-        if(cursor.rowcount==0):
+        if(cursor.rowcount>1):
+            print("Encuentro mas de un registro", file=sys.stderr)
+            sql="DELETE FROM Datos WHERE CID='" + CID + "' AND SID='" + SID + "' AND SSID='" + SSID +"'"
+            #print("sqi: " + sql, file=sys.stderr)
+            cursor.execute(sql)
+    
+        elif(cursor.rowcount==0):
             #Preparo la insercion de los datos
             sql = "insert into Datos (CID, SID, SSID, Dato, timeCambio) values ('" + CID + "','" + SID + "','" + SSID + "','" + datos + "','"  + timeStamp + "')"
         else:
@@ -1120,7 +1164,7 @@ if __name__ == "__main__":
             if "dbNombre" in dbConfig: dbNombre  = dbConfig["dbNombre"]
 
         try:
-            db = MySQLdb.connect(dbIP,dbUsuario,dbPassword,dbNombre)
+            db = MySQLdb.connect(dbIP,dbUsuario,dbPassword,dbNombre, charset='utf8')
             db.autocommit(True)
             cursor = db.cursor(MySQLdb.cursors.DictCursor)
             print('Conectado a la base de datos ' + dbNombre)
@@ -1157,9 +1201,7 @@ if __name__ == "__main__":
         # app.config['MQTT_TLS_CA_CERTS'] = 'ca.crt'
         
         print("Configuracion MQTT\nbroker: [" + str(app.config['MQTT_BROKER_URL']) + "]\npuerto: [" + str(app.config['MQTT_BROKER_PORT']) + "]\nusuario: [" + str(app.config['MQTT_USERNAME']) + "]\npass: [" + str(app.config['MQTT_PASSWORD']) + "]\npub topic root: [" + str(app.config['pubTopicRoot']) + "]\nsub topic root: [" + str(app.config['subTopicRoot']) + "]")
-        print("Configuracion MQTT\nbroker: [" + str(app.config['MQTT_BROKER_URL']) + "]\npuerto: [" + str(app.config['MQTT_BROKER_PORT']) + "]\nusuario: [" + str(app.config['MQTT_USERNAME']) + "]\npass: [" + str(app.config['MQTT_PASSWORD']) + "]\npub topic root: [" + str(app.config['pubTopicRoot']) + "]\nsub topic root: [" + str(app.config['subTopicRoot']) + "]")
 
-        mqtt_client.init_app(app)
         mqtt_client.init_app(app)
 
         #Config de presentacion

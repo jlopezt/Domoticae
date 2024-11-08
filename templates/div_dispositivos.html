@@ -2,37 +2,53 @@
     function inicializaDiv(){}
     
     function datosDispositivo(id){
-    console.log('pulso en seleccionar datos')
-    myObj=document.getElementById('accion')
-    myObj.setAttribute('value','datos')
-    myObj=document.getElementById('formSeleccionarDispositivo')
-    myObj.setAttribute('action', '/dispositivo/' + id)
-    myObj.submit()
+        console.log('pulso en seleccionar datos')
+        myObj=document.getElementById('accion')
+        myObj.setAttribute('value','datos')
+        myObj=document.getElementById('formSeleccionarDispositivo')
+        myObj.setAttribute('action', '/dispositivo/' + id)
+        myObj.submit()
     }
 
     function configuracionDispositivo(id){
-    console.log('pulso en seleccionar configuracion')
-    myObj=document.getElementById('accion')
-    myObj.setAttribute('value','configuracion')
-    myObj=document.getElementById('formSeleccionarDispositivo')
-    myObj.setAttribute('action', '/dispositivo/' + id)
-    myObj.submit()
+        console.log('pulso en seleccionar configuracion')
+        myObj=document.getElementById('accion')
+        myObj.setAttribute('value','configuracion')
+        myObj=document.getElementById('formSeleccionarDispositivo')
+        myObj.setAttribute('action', '/dispositivo/' + id)
+        myObj.submit()
     }
 
+    function reinicioDispositivo(id){
+        console.log('pulso en seleccionar configuracion')
+        myObj=document.getElementById('accion')
+        myObj.setAttribute('value','reiniciar')
+        myObj=document.getElementById('formSeleccionarDispositivo')
+        myObj.setAttribute('action', '/dispositivo/' + id)
+        myObj.submit()
+      }
+
     function validarDispositivo(id){
-    console.log('pulso en validar')
-    var xhValidar = new XMLHttpRequest();
-    xhValidar.open("POST","/dispositivo/" + id, false)
-    xhValidar.send(null)
-    location.reload()  
+        console.log('pulso en validar')
+        var xhValidar = new XMLHttpRequest();
+        xhValidar.open("POST","/dispositivo/" + id, false)
+        xhValidar.send(null)
+        location.reload()  
     }
 
     function borrarDispositivo(id){
-    console.log('pulso en borrar')
-    var xhBorrar = new XMLHttpRequest();
-    xhBorrar.open("DELETE","/dispositivo/" + id, false)
-    xhBorrar.send(null)
-    location.reload()
+        console.log('pulso en borrar')
+        var xhBorrar = new XMLHttpRequest();
+        xhBorrar.open("DELETE","/dispositivo/" + id, false)
+        xhBorrar.send(null)
+        location.reload()
+    }
+
+    function webDispositivo(id){
+        console.log('pulso en web')
+        myObj=document.getElementById('formWebDispositivo')
+        myObj.setAttribute('action', "/webActuador/" + id)
+        myObj.submit()
     }
 </script>
 
@@ -47,6 +63,11 @@
 
     <form id="formSeleccionarDispositivo" action="" target="_self" method="get">
         <input id="accion" type="hidden" name="accion" value="">
+        <!--<input id="botonSelecciona" type="hidden" name="dir" value="">-->
+    </form>
+        
+    <form id="formWebDispositivo" action="" target="_self" method="get">
+        <!--<input id="accion" type="hidden" name="accion" value="">-->
         <!--<input id="botonSelecciona" type="hidden" name="dir" value="">-->
     </form>
         
@@ -71,6 +92,8 @@
                 <button onclick="borrarDispositivo('{{ dispositivo['DID'] }}')">Borrar</button>
                 <button onclick="datosDispositivo('{{ dispositivo['DID'] }}')">Datos</button>
                 <button onclick="configuracionDispositivo('{{ dispositivo['DID'] }}')">Configuracion</button>
+                <button onclick="reinicioDispositivo('{{ dispositivo['DID'] }}')">Reinicio</button>
+                <button onclick="webDispositivo('{{ dispositivo['DID'] }}')">Web</button>
             </td>
         </tr>
         {% endfor%}

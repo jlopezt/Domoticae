@@ -3,6 +3,12 @@
     "IP": "10.68.0.100",
     "puerto" : 5001
   },
+  "Logging":{
+    "LOG_FILE" : "/home/pi/desarrollo/python/flask/Domoticae-plataforma/log/Domoticae.log",
+    "LOG_LEVEL" : 10,
+    "LOG_FORMAT" : "%(asctime)s %(message)s",
+    "LOG_DATE_FORMAT" : "%Y-%m-%d %H:%M:%S"
+  },
   "Ficheros":{
     "usuarios": "usuarios"
   },

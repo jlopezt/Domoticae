@@ -7,6 +7,6 @@ export FLASK_DEBUG=1
 #export FLASK_ENV=development
 
 #flask run --host=10.68.0.101 --port=15000
-python domoticae.py >> log/Domoticae-plataforma.log
+python3 domoticae.py >> log/Domoticae-plataforma.log
 
 

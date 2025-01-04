@@ -12,7 +12,8 @@ import json
 import sys
 import os
 
-import MySQLdb
+#import MySQLdb
+from db_connection import DBConnection
 
 import logging
 import config
@@ -41,27 +42,6 @@ mqtt_client = Mqtt()
 
 app = Flask(__name__)
 #Fin de declaracion de variables globales
-
-def TestYconect():
-    logger.info("Compruebo la conexion a db...")
-    
-    sql = "SELECT 'KEEP ALIVE';"
-    logger.info("Consulta: " + sql)
-
-    try:
-        cursor.execute(sql)
-        logger.info("Conexion a db OK")
-    #except MySQLdb.Error as e:
-    except Exception as e: 
-        logger.info("error ", e)        
-        db = MySQLdb.connect(dbIP,dbUsuario,dbPassword,dbNombre, charset='utf8')
-        db.autocommit(True)
-        cursor = db.cursor(MySQLdb.cursors.DictCursor)
-        logger.info('Reconectado a la base de datos ' + dbNombre)
-        return "Reconectado"
-    #except Exception as e: 
-    #    logger.info("No puedo conectar a la base de datos:",e)
-    #    sys.exit(1)
 
 #************************************************* GUI usuario *************************************************************
 @app.route('/')
@@ -114,6 +94,9 @@ def debug3():
 
 @app.route('/reconnect')
 def reconect():
+    db.check_connection()
+    return redirect("/",302)
+    '''
     logger.info("Reconectando...")
     try:
         db = MySQLdb.connect(dbIP,dbUsuario,dbPassword,dbNombre, charset='utf8')
@@ -124,7 +107,8 @@ def reconect():
     except MySQLdb.Error as e:
         logger.info("No puedo conectar a la base de datos:",e)
         sys.exit(1)
-
+    '''
+    
 @app.route('/validaUsuario')
 def validarUsuario():
     result = 0
@@ -132,52 +116,53 @@ def validarUsuario():
     password_txt = str(request.args.get('password'))
     password = md5(password_txt.encode("utf-8")).hexdigest()
 
-    logger.info("usuario: " + username + " password txt: " + password_txt + " password: " + password)
-
-    TestYconect()#Comprueba si esta la bd conectada
+    #logger.info("usuario: " + username + " password txt: " + password_txt + " password: " + password)
+    logger.info(f"usuario: {username}  password: {password}")
 
     sql = "select Nombre, Apellidos, Correo, Telefono, Direccion_ppal from Usuarios where Usuario = '" + username + "' and Password='" + password + "'"
     logger.info("Consulta: " + sql)
-
+    
     try:
-        cursor.execute(sql)
+        cursor = db.execute(sql)
+      
+        #Si he encontrado el usaurio
+        if (cursor.rowcount>0): 
+            registro = cursor.fetchone()
+            #logger.info(registro["Nombre"],registro["Apellidos"],registro["Correo"],registro["Telefono"],registro["Direccion_ppal"],username)
+
+            usuarioValidado["Nombre"] = registro["Nombre"]
+            usuarioValidado["Apellidos"] = registro["Apellidos"]
+            usuarioValidado["Direccion"] = registro["Direccion_ppal"]
+            usuarioValidado["Correo"] = registro["Correo"]
+            usuarioValidado["Telefono"] = registro["Telefono"]
+            usuarioValidado["Usuario"] = username
+
+            #Le añado a la lista de conectados
+            usuariosConectados.crea(username)
+
+            #respuesta = redirect("static/recargaPagina.html", code=302)
+            respuesta = redirect("/", code=302)
+            respuesta.set_cookie("userID",username)
+            return respuesta
+
+        #Si la password no coincide
+        else:
+            usuarioValidado["Nombre"] = ""
+            usuarioValidado["Apellidos"] = ""
+            usuarioValidado["Direccion"] = 0
+            usuarioValidado["Correo"] = ""
+            usuarioValidado["Telefono"] = ""
+            usuarioValidado["Usuario"] = ""
+            
+            respuesta = make_response(render_template('mensaje.html', MENSAJE = "El usuario o la password son incorrectos.", SECUNDARIO = "Todo KO"),200)
+            respuesta.set_cookie("userID","")
+            return respuesta
+
     except Exception as e: 
         logger.info(e)  
-        logger.info("Error en la consulta")       
-
-    #Si he encontrado el usaurio
-    if (cursor.rowcount>0): 
-        registro = cursor.fetchone()
-        #logger.info(registro["Nombre"],registro["Apellidos"],registro["Correo"],registro["Telefono"],registro["Direccion_ppal"],username)
-
-        usuarioValidado["Nombre"] = registro["Nombre"]
-        usuarioValidado["Apellidos"] = registro["Apellidos"]
-        usuarioValidado["Direccion"] = registro["Direccion_ppal"]
-        usuarioValidado["Correo"] = registro["Correo"]
-        usuarioValidado["Telefono"] = registro["Telefono"]
-        usuarioValidado["Usuario"] = username
-
-        #Le añado a la lista de conectados
-        usuariosConectados.crea(username)
-
-        #resp = redirect("static/recargaPagina.html", code=302)
-        resp = redirect("/", code=302)
-        resp.set_cookie("userID",username)
-        return resp
-
-    #Si la password no coincide
-    else:
-        usuarioValidado["Nombre"] = ""
-        usuarioValidado["Apellidos"] = ""
-        usuarioValidado["Direccion"] = 0
-        usuarioValidado["Correo"] = ""
-        usuarioValidado["Telefono"] = ""
-        usuarioValidado["Usuario"] = ""
+        logger.info("Error en la consulta") 
+        return "Error en BD"
         
-        respuesta = make_response(render_template('mensaje.html', MENSAJE = "El usuario o la password son incorrectos.", SECUNDARIO = "Todo KO"),200)
-        respuesta.set_cookie("userID","")
-        return respuesta
-
 @app.route('/cerrarSesion')
 def cerrarSesion():
     #Lo elimino de la lista
@@ -252,29 +237,31 @@ def crearUsuario():
     sql = "select Usuario from Usuarios where usuario='" + username + "'"
     logger.info("Consulta: " + sql)
 
-    cursor.execute(sql)
-    if(cursor.rowcount>0):
-        return render_template('mensaje.html', MENSAJE = "Error al crear usuario. El usuario [" + username + "]ya existe", SECUNDARIO = "Todo KO")
-
-    #creo el nuevo usuario
-    sql = "insert into Usuarios (Nombre, Apellidos, Correo, Telefono, Direccion_ppal, Usuario, Password) values ('" + nombre + "','" + apellidos + "','" + correo + "','" + telefono + "','" + direccion + "','" + username + "','" + password +"')"
-    logger.info("Consulta: " + sql)  
-
     try:
-        cursor.execute(sql)
+        cursor = db.execute(sql)
+        if(cursor.rowcount>0):
+            return render_template('mensaje.html', MENSAJE = "Error al crear usuario. El usuario [" + username + "]ya existe", SECUNDARIO = "Todo KO")
+
+        #creo el nuevo usuario
+        sql = "insert into Usuarios (Nombre, Apellidos, Correo, Telefono, Direccion_ppal, Usuario, Password) values ('" + nombre + "','" + apellidos + "','" + correo + "','" + telefono + "','" + direccion + "','" + username + "','" + password +"')"
+        logger.info("Consulta: " + sql)  
+
+        cursor = db.execute(sql)
         db.commit()
+
+        #Le añado a la lista de conectados
+        usuariosConectados.crea(username)
+
+        resp = redirect("/", code=302)
+        resp.set_cookie("userID",username)
+        return resp
+    
     except Exception as e: 
         logger.info(e)  
         db.rollback()
         logger.info("Error en la consulta")
         return render_template('mensaje.html', MENSAJE = "Error al crear usuario.", SECUNDARIO = "Todo KO")
 
-    #Le añado a la lista de conectados
-    usuariosConectados.crea(username)
-
-    resp = redirect("/", code=302)
-    resp.set_cookie("userID",username)
-    return resp
 
 @app.route('/actualizaUsuario/<string:usuario>')
 def actualizaUsuario(usuario):
@@ -304,20 +291,20 @@ def actualizaUsuario(usuario):
     logger.info("Consulta: " + sql)
     
     try:
-        cursor.execute(sql)
+        cursor = db.execute(sql)
         db.commit()
+
+        usuarioValidado = dameUsuario(usuario)
+
+        resp = redirect('/datosUsuario', code=302)
+        resp.set_cookie("userID",usuarioValidado['Usuario'])
+        return resp
 
     except Exception as e: 
         logger.info(e)  
         db.rollback()
         logger.info("Error en la consulta")
         return render_template('mensaje.html', MENSAJE = "Error al crear usuario.", SECUNDARIO = "Todo KO")
-
-    usuarioValidado = dameUsuario(usuario)
-
-    resp = redirect('/datosUsuario', code=302)
-    resp.set_cookie("userID",usuarioValidado['Usuario'])
-    return resp
 
 @app.route('/resetPassword/<string:usuario>')
 def resetPassword(usuario):
@@ -344,20 +331,20 @@ def resetPassword(usuario):
     logger.info("Consulta: " + sql)
     
     try:
-        cursor.execute(sql)
+        cursor = db.execute(sql)
         db.commit()
+
+        usuarioValidado = dameUsuario(usuario)
+
+        resp = redirect('/datosUsuario', code=302)
+        resp.set_cookie("userID",usuarioValidado['Usuario'])
+        return resp
 
     except Exception as e: 
         logger.info(e)  
         db.rollback()
         logger.info("Error en la consulta")
         return render_template('mensaje.html', MENSAJE = "Error al resetear contraseña.", SECUNDARIO = "Todo KO")
-
-    usuarioValidado = dameUsuario(usuario)
-
-    resp = redirect('/datosUsuario', code=302)
-    resp.set_cookie("userID",usuarioValidado['Usuario'])
-    return resp
 
     #************************************************* fin usuario *************************************************************
     #*************************************************
@@ -390,21 +377,21 @@ def dispositivosUsuario(usuario):
         return redirect("/", code=302)
         return redirect("/", code=302)
 
-    sql='select SID,DID,validado from Dispositivos where CID="' + usuario + '" order by SID'
+    sql='select SID,DID,validado,version from Dispositivos where CID="' + usuario + '" order by SID'
     logger.info("Consulta: " + sql)
     try:
-        cursor.execute(sql)
+        cursor = db.execute(sql)
         if(cursor.rowcount>0):
             dispositivios = cursor.fetchall()
             logger.info(dispositivios)
 
+        delante = render_template('/div_dispositivos.html',DISPOSITIVOS=dispositivios, USUARIO=usuario)
+        detras = ""
+        return render_template('inicio.html', DELANTE=delante, DETRAS=detras,NOMBRE_PRINCIPIO=nombrePrincipio, NOMBRE_ROJO=nombreRojo, NOMBRE_FINAL=nombreFinal, PRINCIPIO=principio, ROJO=rojo, FINAL=final, PIE=pie, USUARIO=usuario)  
+
     except Exception as e: 
         logger.info(e)  
         return make_response('Error SQL',500)
-
-    delante = render_template('/div_dispositivos.html',DISPOSITIVOS=dispositivios, USUARIO=usuario)
-    detras = ""
-    return render_template('inicio.html', DELANTE=delante, DETRAS=detras,NOMBRE_PRINCIPIO=nombrePrincipio, NOMBRE_ROJO=nombreRojo, NOMBRE_FINAL=nombreFinal, PRINCIPIO=principio, ROJO=rojo, FINAL=final, PIE=pie, USUARIO=usuario)  
 
 
 @app.route('/dispositivo/<string:DID>', methods = ['POST','GET','DELETE'])
@@ -427,7 +414,7 @@ def dispositivo(DID):
         sql='select * from Dispositivos where DID="' + DID + '"'
         logger.info("Consulta: " + sql)
         try:
-            cursor.execute(sql)
+            cursor = db.execute(sql)
             if(cursor.rowcount>0):
                 registro = cursor.fetchone()
                 SID=registro['SID']
@@ -499,8 +486,8 @@ def dispositivo(DID):
 
     return render_template('inicio.html', DELANTE=delante, DETRAS=detras,NOMBRE_PRINCIPIO=nombrePrincipio, NOMBRE_ROJO=nombreRojo, NOMBRE_FINAL=nombreFinal, PRINCIPIO=principio, ROJO=rojo, FINAL=final, PIE=pie, USUARIO=usuario)  
 
-    #************************************************* fin dispositivos ********************************************************
-    #************************************************* Web Actuador ********************************************************
+#************************************************* fin dispositivos ********************************************************
+#************************************************* Web Actuador ********************************************************
 @app.route('/webActuador/', methods=['GET'])
 @app.route('/webActuador/<string:DID>/', methods=['GET'])
 def webActuador(DID=""):
@@ -513,25 +500,13 @@ def webActuador(DID=""):
             logger.info("---------------->No se puede renovar")
             return redirect('/',302)
 
-    #usuarioValidado = dameUsuario(usuario)
-    '''
-    usuario = dameUsuarioDispositivo(DID)
-
-    if usuario=='':
-        pass #Vamos a / sin cookie
-
-    if validaSesion(usuario)!=OK:
-        return redirect('/',302)
-    '''
-
     SID=dameNombreDispositivo(DID)
     if(SID==""): SID="Test1"
         
     delante = render_template('root.html',SID=SID)
     detras = ""
     return render_template('inicio.html', DELANTE=delante, DETRAS=detras,NOMBRE_PRINCIPIO=nombrePrincipio, NOMBRE_ROJO=nombreRojo, NOMBRE_FINAL=nombreFinal, PRINCIPIO=principio, ROJO=rojo, FINAL=final, PIE=pie, USUARIO=usuario)
-    
-    #************************************************* fin Web Actuador ********************************************************
+#************************************************* fin Web Actuador ********************************************************
     
 #************************************************* GUI usuario *************************************************************
 #*************************************************
@@ -617,7 +592,7 @@ def asocia(usuario,deviceID):
     #compruebo el usuario
     sql = "select Usuario from Usuarios where Usuario='" + usuario + "'"
     logger.info("Consulta: " + sql)
-    cursor.execute(sql)
+    cursor = db.execute(sql)
     if(cursor.rowcount<=0):
         return make_response('Usuario no valido',404)
 
@@ -641,12 +616,12 @@ def asocia(usuario,deviceID):
         sql = "select * from Dispositivos where DID='" + deviceID + "'"
         logger.info("Consulta: " + sql)
         try:
-            cursor.execute(sql)
+            cursor = db.execute(sql)
             if(cursor.rowcount<=0):
                 #Compruebo si hay otro con el mismo nombre para ese usuario
                 sql = "select * from Dispositivos where CID='" + usuario + "' and SID='" + nombreServicio +"'"
                 logger.info("Consulta: " + sql)
-                cursor.execute(sql)
+                cursor = db.execute(sql)
                 
                 if(cursor.rowcount<=0):
                     #Si no existe, lo creo
@@ -657,7 +632,7 @@ def asocia(usuario,deviceID):
 
                     sql = "insert into Dispositivos (DID,SID,CID,Contrasena,DeviceType,version) values ('" + deviceID + "','" + nombreServicio + "','" + usuario + "','" + contrasena + "','" + tipoDispositivo + "','" + versionDispositivo + "')"
                     logger.info("Consulta: " + sql)
-                    cursor.execute(sql)
+                    cursor = db.execute(sql)
                     db.commit()
                     return make_response('Dispositivo asignado', 201) #El dispositivo no estaba y se ha registrado
                 else:
@@ -668,6 +643,14 @@ def asocia(usuario,deviceID):
                 if(registro['CID']==usuario):
                     if(registro['SID']==nombreServicio):
                         if(registro['Validado']==1):
+                            #Actualizo la version del dispositivo si toca
+                            versionDispositivo=request.args.get('version')
+                            if(registro['Version']!=versionDispositivo):
+                                sql = "UPDATE Dispositivos SET version='"+ versionDispositivo +  "' WHERE DID='" + deviceID + "'"
+                                logger.info("Consulta: " + sql)
+                                cursor = db.execute(sql)
+                                db.commit()  
+                                logger.info("actualizada version del dispositivo")                              
                             return make_response('El dispositivo ya estaba registrado para ese usuario y con ese nombre', 200) #El dispositivo ya estaba asociado con el mismo usuario y nombre
                         else:
                             return make_response('El dispositivo ya estaba registrado para ese usuario y con ese nombre, pero no esta validado', 203) #El dispositivo ya estaba asociado con el mismo usuario y nombre
@@ -691,7 +674,7 @@ def asocia(usuario,deviceID):
             #Compruebo si el dispositivo ya existe
             sql = "select * from Dispositivos where Validado=1 and DID='" + deviceID + "'"
             logger.info("Consulta: " + sql)
-            cursor.execute(sql)
+            cursor = db.execute(sql)
             if(cursor.rowcount<=0):
                 #Si no existe, retorna error
                 logger.info('No existe el deviceID')
@@ -757,7 +740,6 @@ def ficheroConfiguracion(usuario,nombreDevice,servicio):
 
     if request.method == 'GET': 
         #valido que tiene permiso
-#       nombreFichero = dirUsuarios + usuario + '/' + nombreDevice + '/generados/' + servicio + '.json'
         nombreFichero = dirUsuarios + usuario + '/' + nombreDevice + '/' + servicio + '.json'
         logger.info('se leera de ' + nombreFichero)
         if not os.path.exists(nombreFichero): return make_response(('File not found',404))
@@ -782,7 +764,7 @@ def recuperaDatos(usuario,nombreDevice,SSID):
 
     #Recupero el valor de la base de datos
     sql='select Dato from Datos where CID="' + usuario + '" and SID="' + nombreDevice + '" and SSID="' + SSID + '"'
-    cursor.execute(sql)
+    cursor = db.execute(sql)
     if(cursor.rowcount==0): return make_response(('Sin datos',404))
     
     datos=cursor.fetchone()
@@ -848,13 +830,6 @@ def enviaMQTT(usuario):
 
 @app.route('/<string:SID>/<string:servicio>', methods=['GET'])
 def nombreDispositivoAPI(SID,servicio):
-    cursor2 = db.cursor(MySQLdb.cursors.DictCursor)
-    """
-    #Compruebo el nombreServicio
-    SID=request.args.get('SID')        
-    if not SID:
-        return make_response('Nombre no valido',404)
-    """    
     servicioDatos={
             "estadoEntradas":"entradas",
             "estadoSalidas":"salidas",
@@ -869,10 +844,10 @@ def nombreDispositivoAPI(SID,servicio):
         #Consulto el SID en la bd
         sql = "select SID, DeviceType,Version from Dispositivos where SID='" + SID +"'"
         logger.info("Consulta: " + sql)
-        cursor2.execute(sql)
+        cursor = db.execute(sql)
         
-        if(cursor2.rowcount>0):
-            registro = cursor2.fetchone()
+        if(cursor.rowcount>0):
+            registro = cursor.fetchone()
             
             resp = {
                 "nombreDispositivo": registro["SID"],
@@ -885,10 +860,10 @@ def nombreDispositivoAPI(SID,servicio):
         #Consulto el SID en la bd
         sql = "select SSID from Datos where SID='" + SID +"'"
         logger.info("Consulta: " + sql)
-        cursor2.execute(sql)
+        cursor = db.execute(sql)
         
-        if(cursor2.rowcount>0):
-            registro = cursor2.fetchall()
+        if(cursor.rowcount>0):
+            registro = cursor.fetchall()
             
         datos=[]
         for x in registro:        
@@ -901,14 +876,13 @@ def nombreDispositivoAPI(SID,servicio):
         #Consulto el SID y el servicio en la bd
         sql = "select Dato from Datos where SID='" + SID + "' and SSID='" + servicioDatos[servicio] + "'"
         logger.info("Consulta: " + sql)
-        cursor2.execute(sql)
+        cursor = db.execute(sql)
         
-        if(cursor2.rowcount>0):
-            registro = cursor2.fetchone()
+        if(cursor.rowcount>0):
+            registro = cursor.fetchone()
             cad=registro["Dato"]
-            cursor2.fetchall()
+            cursor.fetchall()
 
-    cursor2.close()
     return Response(response=cad, status=200, mimetype="application/json")
 #************************************************* API *************************************************************
 #*************************************************
@@ -929,35 +903,36 @@ def dameUsuario(username):
     logger.info("Consulta: " + sql)
 
     try:
-        cursor.execute(sql)
+        cursor = db.execute(sql)
+
+        #Si he encontrado el usaurio
+        if (cursor.rowcount>0): 
+            registro = cursor.fetchone()
+            logger.info(f"Nombre: {registro['Nombre']}, Apellido: {registro['Apellidos']}, Correo: {registro['Correo']}, Telefono: {registro['Telefono']}, Direccion {registro['Direccion_ppal']}, Usuario {'username'}")
+
+            usuarioValidado["Nombre"] = registro["Nombre"]
+            usuarioValidado["Apellidos"] = registro["Apellidos"]
+            usuarioValidado["Direccion"] = registro["Direccion_ppal"]
+            usuarioValidado["Correo"] = registro["Correo"]
+            usuarioValidado["Telefono"] = registro["Telefono"]
+            usuarioValidado["Usuario"] = username
+        else:
+            usuarioValidado["Nombre"] = ""
+            usuarioValidado["Apellidos"] = ""
+            usuarioValidado["Direccion"] = 0
+            usuarioValidado["Correo"] = ""
+            usuarioValidado["Telefono"] = ""
+            usuarioValidado["Usuario"] = ""
+
+        return usuarioValidado
+
     except Exception as e: 
         logger.info(e)  
         logger.info("Error en la consulta")       
-
-    #Si he encontrado el usaurio
-    if (cursor.rowcount>0): 
-        registro = cursor.fetchone()
-        logger.info(registro["Nombre"],registro["Apellidos"],registro["Correo"],registro["Telefono"],registro["Direccion_ppal"],username)
-
-        usuarioValidado["Nombre"] = registro["Nombre"]
-        usuarioValidado["Apellidos"] = registro["Apellidos"]
-        usuarioValidado["Direccion"] = registro["Direccion_ppal"]
-        usuarioValidado["Correo"] = registro["Correo"]
-        usuarioValidado["Telefono"] = registro["Telefono"]
-        usuarioValidado["Usuario"] = username
-    else:
-        usuarioValidado["Nombre"] = ""
-        usuarioValidado["Apellidos"] = ""
-        usuarioValidado["Direccion"] = 0
-        usuarioValidado["Correo"] = ""
-        usuarioValidado["Telefono"] = ""
-        usuarioValidado["Usuario"] = ""
-
-    return usuarioValidado
     
 def validaContrasena(_usuario, _deviceID, _contrasena_in):
     sql="select Contrasena from Dispositivos where CID='" + _usuario + "' and DID='" + _deviceID + "'"
-    cursor.execute(sql)
+    cursor = db.execute(sql)
     if(cursor.rowcount<=0):
         #Si no existe, retorna error
         logger.info('No existe el dispositivo')
@@ -989,7 +964,7 @@ def validaSesion(usuario):
 def dameNombreDispositivo(deviceID):
     sql='select SID from Dispositivos where DID="' + deviceID +'"'
     try:
-        cursor.execute(sql)
+        cursor = db.execute(sql)
         if(cursor.rowcount>0):
             registro=cursor.fetchone()
             return registro['SID']
@@ -1002,7 +977,7 @@ def dameNombreDispositivo(deviceID):
 def dameUsuarioDispositivo(deviceID):
     sql='select CID from Dispositivos where DID="' + deviceID +'"'
     try:
-        cursor.execute(sql)
+        cursor = db.execute(sql)
         if(cursor.rowcount>0):
             registro=cursor.fetchone()
             return registro['CID']
@@ -1015,7 +990,7 @@ def dameUsuarioDispositivo(deviceID):
 def dameDeviceID(nombre,usuario):
     sql='select DID from Dispositivos where CID="' + usuario + '" and SID="' + nombre +'"'
     try:
-        cursor.execute(sql)
+        cursor = db.execute(sql)
         if(cursor.rowcount>0):
             registro=cursor.fetchone()
             return registro['DID']
@@ -1028,7 +1003,7 @@ def dameDeviceID(nombre,usuario):
 def dameDeviceValidado(ID):
     sql='select Validado from Dispositivos where DID="' + ID +'"'
     try:
-        cursor.execute(sql)
+        cursor = db.execute(sql)
         if(cursor.rowcount>0):
             registro=cursor.fetchone()
             return registro['Validado']
@@ -1042,7 +1017,7 @@ def borraDeviceID(ID):
     sql='delete from Dispositivos where DID="' + ID +'"'
     logger.info(sql)
     try:
-        cursor.execute(sql)
+        cursor = db.execute(sql)
         db.commit()
         return True
 
@@ -1054,7 +1029,7 @@ def validaDeviceID(DID):
     sql='update Dispositivos set Validado=1 where DID="' + DID +'"'
     logger.info(sql)
     try:
-        cursor.execute(sql)
+        cursor = db.execute(sql)
         db.commit()
         return True
 
@@ -1112,7 +1087,7 @@ def handle_mqtt_message(client, userdata, message):
         sql="select Validado from Dispositivos where SID='" + SID + "' and CID='" + CID + "'"
         #logger.info("consulta: ", sql)
 
-        cursor.execute(sql)
+        cursor = db.execute(sql)
         if(cursor.rowcount==0): 
             #logger.info("La pareja CID - SID no es valida") 
             return KO
@@ -1128,12 +1103,13 @@ def handle_mqtt_message(client, userdata, message):
 
         timeStamp=time.strftime("%Y-%m-%d %I:%M:%S")
 
-        cursor.execute(sql)
+        cursor = db.execute(sql)
         if(cursor.rowcount>1):
-            logger.info("Encuentro mas de un registro", file=sys.stderr)
+            logger.info(f"Encuentro mas de un registro para {sql}")#, file=sys.stderr)
+
             sql="DELETE FROM Datos WHERE CID='" + CID + "' AND SID='" + SID + "' AND SSID='" + SSID +"'"
             #logger.info("sqi: " + sql, file=sys.stderr)
-            cursor.execute(sql)
+            cursor = db.execute(sql)
     
         elif(cursor.rowcount==0):
             #Preparo la insercion de los datos
@@ -1143,12 +1119,13 @@ def handle_mqtt_message(client, userdata, message):
             #sql = "update Datos set Dato='" + datos + "', timeCambio= STR_TO_DATE( '" + timeStamp + "', '%d/%m/%Y %H:%i:%s') where SSID='" + SSID + "' and SID='" + SID + "' and CID='" + CID + "'"
             sql = "update Datos set Dato='" + datos + "', timeCambio= '" + timeStamp + "' where SSID='" + SSID + "' and SID='" + SID + "' and CID='" + CID + "'"
         #logger.info("consulta: ", sql)
-        cursor.execute(sql)
+        cursor = db.execute(sql)
         db.commit()
         return OK
 
     except Exception as e:
         logger.info("------------------error--------------")
+        logger.info(f"topic: {str(message.topic)} || mensaje: {str(message.payload.decode('utf-8'))}")
         logger.info(e)  
         logger.info("Topic que genera el error: ", message.topic)
         logger.info("Mensaje que genera el error: ", message.payload.decode("utf-8"))
@@ -1216,11 +1193,14 @@ if __name__ == "__main__":
             if "dbPassword" in dbConfig: dbPassword = dbConfig["dbPassword"]
             if "dbNombre" in dbConfig: dbNombre  = dbConfig["dbNombre"]
 
-        try:
+        try:     
+            '''
             db = MySQLdb.connect(dbIP,dbUsuario,dbPassword,dbNombre, charset='utf8')
             db.autocommit(True)
             cursor = db.cursor(MySQLdb.cursors.DictCursor)
             logger.info('Conectado a la base de datos ' + dbNombre)
+            '''
+            db = DBConnection(dbIP, dbUsuario, dbPassword, dbNombre)
         except MySQLdb.Error as e:
             logger.info("No puedo conectar a la base de datos:",e)
             sys.exit(1)

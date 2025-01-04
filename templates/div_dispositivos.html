@@ -77,6 +77,7 @@
         <tr id="tr_dispositivos" class="modo2">
         <th align="">Nombre del servicio</th>
         <th align="">ID dispositivo</th>
+        <th align="">Version</th>
         <th align="">Validado</th>
         <th align="">Acciones</th>
         </tr>
@@ -84,6 +85,7 @@
         <tr id="dispositivo_" class="modo2">
             <td id="dispositivo_nombre_" align="left">{{ dispositivo['SID'] }}</td>
             <td id="dispositivo_ID_" align="left">{{ dispositivo['DID'] }}</td>
+            <td id="dispositivo_Version_" align="left">{{ dispositivo['version'] }}</td>
             <td id="dispositivo_validado_" align="left">{{ dispositivo['validado'] }}</td>
             <td id="dispositivo_acciones_" align="left">
                 {% if dispositivo['validado']==0 %}
